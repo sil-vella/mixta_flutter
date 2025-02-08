@@ -12,7 +12,6 @@ import '../../utils/consts/config.dart';
 
 class AdvertsPlugin extends PluginBase {
   final ServicesManager servicesManager;
-  final bannerAdUnitId = Config.admobsBottomBanner01;
   final interstitialAdUnitId = Config.admobsInterstitial01;
   final rewardedAdUnitId = Config.admobsRewarded01;
 
@@ -21,7 +20,7 @@ class AdvertsPlugin extends PluginBase {
       : servicesManager = ServicesManager(),
         super(hooksManager, moduleManager) {
     moduleMap.addAll({
-      'admobs_banner_ad_module': () => BannerAdModule(bannerAdUnitId),
+      'admobs_banner_ad_module': () => BannerAdModule(),
       'admobs_interstitial_ad_module': () => InterstitialAdModule(interstitialAdUnitId),
       'admobs_rewarded_ad_module': () => RewardedAdModule(rewardedAdUnitId),
     });
@@ -40,11 +39,13 @@ class AdvertsPlugin extends PluginBase {
     final rewardedAdModule = moduleManager.getModule('admobs_rewarded_ad_module');
 
     if (bannerAdModule != null) {
-      await bannerAdModule.callMethod("loadBannerAd");
-      Logger().info('✅ Banner Ad preloaded.');
+      await bannerAdModule.callMethod("loadBannerAd", Config.admobsTopBanner);
+      await bannerAdModule.callMethod("loadBannerAd", Config.admobsBottomBanner);
+      Logger().info('✅ Banner Ads preloaded.');
     } else {
-      Logger().error('❌ Failed to preload Banner Ad: Module not found.');
+      Logger().error('❌ Failed to preload Banner Ads: Module not found.');
     }
+
 
     if (interstitialAdModule != null) {
       await interstitialAdModule.callMethod("loadInterstitialAd");

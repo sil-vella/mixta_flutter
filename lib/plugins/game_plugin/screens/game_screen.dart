@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/00_base/screen_base.dart';
 import '../../../tools/logging/logger.dart';
+import '../../../utils/consts/theme_consts.dart';
 import '../modules/game_play_module/game_play_module.dart';
 
 class GameScreen extends BaseScreen {
@@ -24,8 +25,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   void initState() {
     super.initState();
     Logger().info("Initializing GameScreen...");
-    // ✅ Retrieve Managers from AppManager
-    moduleManager = appManager.moduleManager;
 
     // ✅ Retrieve GamePlayModule from ModuleManager
     gamePlayModule = moduleManager.getModule('game_play_module') ?? GamePlayModule();
@@ -84,7 +83,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
                 : Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // ✅ 2x2 Grid Layout for 4 images
+                // ✅ 2x2 Grid Layout for 4 images with a border
                 GridView.builder(
                   shrinkWrap: true,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -96,15 +95,27 @@ class GameScreenState extends BaseScreenState<GameScreen> {
                   itemBuilder: (context, index) {
                     return GestureDetector(
                       onTap: () => _handleAnswer(gamePlayModule.imageOptions[index]),
-                      child: Image.network(
-                        gamePlayModule.imageOptions[index],
-                        height: 150,
-                        width: 150,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.broken_image,
-                          size: 100,
-                          color: Colors.grey,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: AppColors.accentColor, // ✅ Accent color border
+                            width: 4.0, // ✅ Border width
+                          ),
+                          borderRadius: BorderRadius.circular(8.0), // ✅ Rounded corners
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4.0), // ✅ Rounded corners for image
+                          child: Image.network(
+                            gamePlayModule.imageOptions[index],
+                            height: 150,
+                            width: 150,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => const Icon(
+                              Icons.broken_image,
+                              size: 100,
+                              color: Colors.grey,
+                            ),
+                          ),
                         ),
                       ),
                     );
@@ -113,10 +124,22 @@ class GameScreenState extends BaseScreenState<GameScreen> {
                 const SizedBox(height: 20),
 
                 // ✅ Display the fact below the images
-                Text(
-                  gamePlayModule.question?['facts']?.join("\n- ") ?? "No facts available",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18),
+                Container(
+                  padding: const EdgeInsets.all(12.0),
+                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentColor, // ✅ Gold Background
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  child: Text(
+                    gamePlayModule.question?['facts']?.join("\n- ") ?? "No facts available",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black, // ✅ Black Text
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 20),
 
@@ -135,8 +158,8 @@ class GameScreenState extends BaseScreenState<GameScreen> {
             ),
           ),
         ),
-
       ],
     );
   }
+
 }

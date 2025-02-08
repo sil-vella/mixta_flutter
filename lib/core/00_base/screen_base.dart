@@ -4,6 +4,7 @@ import '../../tools/logging/logger.dart';
 import '../managers/app_manager.dart';
 import '../managers/module_manager.dart';
 import '../managers/navigation_manager.dart';
+import '../../utils/consts/config.dart'; // ✅ Import AdMob Config
 
 abstract class BaseScreen extends StatefulWidget {
   const BaseScreen({Key? key}) : super(key: key);
@@ -18,8 +19,7 @@ abstract class BaseScreen extends StatefulWidget {
 abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   late final AppManager appManager;
   late final ModuleManager moduleManager;
-  late final dynamic topBannerAdModule;
-  late final dynamic bottomBannerAdModule;
+  late final dynamic bannerAdModule;
 
   @override
   void initState() {
@@ -29,60 +29,88 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
     appManager = Provider.of<AppManager>(context, listen: false);
     moduleManager = appManager.moduleManager; // ✅ Use existing instance
 
-    // ✅ Retrieve Banner Ad Modules
-    topBannerAdModule = moduleManager.getModule('admobs_top_banner_ad_module');
-    bottomBannerAdModule = moduleManager.getModule('admobs_bottom_banner_ad_module');
+    // ✅ Fetch the BannerAdModule **once**
+    bannerAdModule = moduleManager.getModule('admobs_banner_ad_module');
 
-    // ✅ Preload banner ads
-    topBannerAdModule?.callMethod("loadBannerAd");
-    bottomBannerAdModule?.callMethod("loadBannerAd");
+    // ✅ Preload top and bottom banners with correct argument passing
+    if (bannerAdModule != null) {
+      bannerAdModule.callMethod("loadBannerAd", Config.admobsTopBanner);
+      bannerAdModule.callMethod("loadBannerAd", Config.admobsBottomBanner);
+      Logger().info('✅ Banner Ads preloaded.');
+    } else {
+      Logger().error("❌ BannerAdModule not found.");
+    }
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    return Consumer<NavigationContainer>(
-      builder: (context, navigationContainer, child) {
-        return Scaffold(
-          appBar: AppBar(
-            // Dynamically compute the title using the widget's computeTitle method
-            title: Text(widget.computeTitle(context)),
-          ),
-          drawer: Drawer(
-            child: ListView(
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Colors.blue,
+    return SafeArea( // ✅ Ensures the top banner is below the status bar
+      child: Column(
+        children: [
+          // ✅ Top Banner Ad
+          if (bannerAdModule != null)
+            Container(
+              height: 50,
+              alignment: Alignment.center,
+              child: bannerAdModule.callMethod("getBannerWidget", [Config.admobsTopBanner, context]) ?? const SizedBox(),
+            ),
+
+          // ✅ Scaffold inside Column (So AppBar is Below Banner)
+          Expanded(
+            child: Consumer<NavigationContainer>(
+              builder: (context, navigationContainer, child) {
+                return Scaffold(
+                  appBar: AppBar(
+                    title: Text(widget.computeTitle(context)),
                   ),
-                  child: Text(
-                    'Navigation Menu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
+                  drawer: Drawer(
+                    child: ListView(
+                      children: [
+                        DrawerHeader(
+                          decoration: const BoxDecoration(color: Colors.blue),
+                          child: const Text(
+                            'Navigation Menu',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                            ),
+                          ),
+                        ),
+                        ...navigationContainer.drawerItems.map(
+                              (item) => ListTile(
+                            leading: Icon(item.icon),
+                            title: Text(item.label),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.pushNamed(context, item.route);
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                ...navigationContainer.drawerItems.map((item) => ListTile(
-                  leading: Icon(item.icon),
-                  title: Text(item.label),
-                  onTap: () {
-                    Navigator.pop(context); // Close the drawer
-                    Navigator.pushNamed(context, item.route);
-                  },
-                )),
-              ],
+                  body: Column(
+                    children: [
+                      Expanded(
+                        child: buildContent(context),
+                      ),
+
+                      // ✅ Bottom Banner Ad
+                      if (bannerAdModule != null)
+                        Container(
+                          height: 50,
+                          alignment: Alignment.center,
+                          child: bannerAdModule.callMethod("getBannerWidget", [Config.admobsBottomBanner, context]) ?? const SizedBox(),
+                        ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
-          body: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: buildContent(context), // Main content of the screen
-              ),
-            ],
-          ),
-        );
-      },
+        ],
+      ),
     );
   }
 

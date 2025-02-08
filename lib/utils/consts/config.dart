@@ -10,7 +10,12 @@ class Config {
   );
 
   // AdMob IDs
-  static const String admobsBottomBanner01 = String.fromEnvironment(
+  static const String admobsTopBanner = String.fromEnvironment(
+    'ADMOBS_TOP_BANNER01',
+    defaultValue: '',
+  );
+  // AdMob IDs
+  static const String admobsBottomBanner = String.fromEnvironment(
     'ADMOBS_BOTTOM_BANNER01',
     defaultValue: '',
   );

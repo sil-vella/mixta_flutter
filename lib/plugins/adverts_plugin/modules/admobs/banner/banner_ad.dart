@@ -4,71 +4,68 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../../../../tools/logging/logger.dart';
 
 class BannerAdModule extends ModuleBase {
-  final String adUnitId;
-  BannerAd? _bannerAd;
+  final Map<String, BannerAd?> _banners = {}; // Store multiple ads
 
-  BannerAdModule._internal(this.adUnitId) {
+  BannerAdModule() {
     _registerBannerMethods();
   }
 
-  /// Factory method to create an instance with the specified ad unit ID
-  factory BannerAdModule(String adUnitId) {
-    return BannerAdModule._internal(adUnitId);
-  }
-
   void _registerBannerMethods() {
-    registerMethod('loadBannerAd', loadBannerAd);
-    registerMethod('disposeBannerAd', disposeBannerAd);
-    registerMethod('getBannerWidget', getBannerWidget); // ✅ Register widget retrieval
+    registerMethod('loadBannerAd', (String adUnitId) => loadBannerAd(adUnitId));
+    registerMethod('disposeBannerAd', (String adUnitId) => disposeBannerAd(adUnitId));
+    registerMethod('getBannerWidget', (String adUnitId, BuildContext context) => getBannerWidget(adUnitId, context));
   }
 
-  /// ✅ Loads the banner ad
-  Future<void> loadBannerAd() async {
-    Logger().info('📢 Loading Banner Ad...');
+  /// ✅ Loads the banner ad with a specified ad unit ID
+  Future<void> loadBannerAd(String adUnitId) async {
+    Logger().info('📢 Loading Banner Ad for ID: $adUnitId');
 
-    _bannerAd = BannerAd(
+    final bannerAd = BannerAd(
       adUnitId: adUnitId,
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
-        onAdLoaded: (_) => Logger().info('✅ Banner Ad Loaded.'),
+        onAdLoaded: (_) => Logger().info('✅ Banner Ad Loaded for ID: $adUnitId.'),
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
-          Logger().error('❌ Failed to load Banner Ad: ${error.message}');
+          Logger().error('❌ Failed to load Banner Ad for ID: $adUnitId. Error: ${error.message}');
           ad.dispose();
         },
       ),
     );
 
-    _bannerAd?.load();
+    await bannerAd.load();
+    _banners[adUnitId] = bannerAd;
   }
 
-  /// ✅ Returns a widget that loads and displays the banner ad
-  Widget getBannerWidget(BuildContext context) {
-    return FutureBuilder<void>(
-      future: loadBannerAd(), // ✅ Ensure ad loads before displaying
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(), // ✅ Show loading spinner
-          );
-        } else if (snapshot.connectionState == ConnectionState.done) {
-          if (_bannerAd != null) {
-            return Container(
-              width: MediaQuery.of(context).size.width,
-              height: _bannerAd!.size.height.toDouble(),
-              child: AdWidget(ad: _bannerAd!),
-            );
-          } else {
-            return const Text("❌ Failed to load banner ad.");
-          }
-        }
-        return const SizedBox();
-      },
+  Widget getBannerWidget(String adUnitId, BuildContext context) {
+    // Always create a new BannerAd instance to avoid reusing the same AdWidget
+    final bannerAd = BannerAd(
+      adUnitId: adUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) => Logger().info('✅ Banner Ad Loaded for ID: $adUnitId.'),
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          Logger().error('❌ Failed to load Banner Ad for ID: $adUnitId. Error: ${error.message}');
+          ad.dispose();
+        },
+      ),
+    );
+
+    bannerAd.load(); // Ensure the ad is loaded before displaying
+
+    return SizedBox(
+      width: MediaQuery.of(context).size.width,
+      height: bannerAd.size.height.toDouble(),
+      child: AdWidget(ad: bannerAd),
     );
   }
 
+
+
   /// ✅ Disposes of the banner ad
-  void disposeBannerAd() {
-    _bannerAd?.dispose();
+  void disposeBannerAd(String adUnitId) {
+    _banners[adUnitId]?.dispose();
+    _banners.remove(adUnitId);
   }
 }

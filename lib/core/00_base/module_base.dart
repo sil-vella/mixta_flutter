@@ -13,20 +13,25 @@ abstract class ModuleBase {
     _methodMap[methodName] = method;
   }
 
-  /// Dynamically call a registered method
-  dynamic callMethod(String methodName, [dynamic args = const [], Map<String, dynamic>? namedArgs]) {
+  /// Dynamically calls a registered method with support for any kind of args
+  dynamic callMethod(String methodName, [dynamic args, Map<String, dynamic>? namedArgs]) {
     if (_methodMap.containsKey(methodName)) {
       final method = _methodMap[methodName]!;
-      if (namedArgs != null && namedArgs.isNotEmpty) {
-        // Convert String keys to Symbol for named arguments
-        final namedSymbols = {for (var key in namedArgs.keys) Symbol(key): namedArgs[key]};
-        return Function.apply(method, args is List ? args : [args], namedSymbols);
+
+      // If no args, pass an empty list
+      if (args == null) {
+        return Function.apply(method, [], namedArgs?.map((key, value) => MapEntry(Symbol(key), value)));
       }
-      return Function.apply(method, args is List ? args : [args]);
+
+      // If args is not a list, wrap it into a list
+      final List<dynamic> positionalArgs = args is List ? args : [args];
+
+      return Function.apply(method, positionalArgs, namedArgs?.map((key, value) => MapEntry(Symbol(key), value)));
     } else {
-      throw Exception('Method $methodName not found in ${this.runtimeType}.');
+      throw Exception('Method "$methodName" not found in ${this.runtimeType}.');
     }
   }
+
 
   /// Dispose method to clean up resources
   void dispose() {
