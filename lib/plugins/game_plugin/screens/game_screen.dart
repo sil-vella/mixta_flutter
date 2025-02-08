@@ -25,6 +25,8 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   late final ModuleManager moduleManager;
   late final GamePlayModule gamePlayModule;
   late final dynamic bannerAdModule;
+  late final dynamic interstitialAdModule;
+  late final dynamic rewardedAdModule;
 
   @override
   void initState() {
@@ -49,7 +51,43 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     } else {
       logger.error("❌ BannerAdModule not found!");
     }
+
+    // ✅ Retrieve Interstitial Ad Module
+    interstitialAdModule = moduleManager.getModule('admobs_interstitial_ad_module');
+
+    // ✅ Retrieve Rewarded Ad Module
+    rewardedAdModule = moduleManager.getModule('admobs_rewarded_ad_module');
   }
+
+  /// ✅ Handles answer selection, shows appropriate ad
+  void _handleAnswer(String selectedImage) {
+    gamePlayModule.checkAnswer(selectedImage, () => setState(() {}));
+
+    if (gamePlayModule.feedbackMessage.contains("Correct")) {
+      // ✅ Show interstitial ad if correct
+      if (interstitialAdModule != null) {
+        logger.info("📢 Showing Interstitial Ad...");
+        interstitialAdModule.callMethod("showInterstitialAd");
+      } else {
+        logger.error("❌ InterstitialAdModule not found!");
+      }
+    } else {
+      // ✅ Show rewarded ad if incorrect
+      if (rewardedAdModule != null) {
+        logger.info("🎬 Showing Rewarded Ad for retry...");
+        rewardedAdModule.callMethod("showRewardedAd", {
+          "onUserEarnedReward": () {
+            logger.info("🎁 User watched ad and earned a retry!");
+          }
+        });
+
+      } else {
+        logger.error("❌ RewardedAdModule not found!");
+      }
+    }
+  }
+
+
 
   @override
   Widget buildContent(BuildContext context) {
@@ -74,8 +112,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
                   itemCount: gamePlayModule.imageOptions.length,
                   itemBuilder: (context, index) {
                     return GestureDetector(
-                      onTap: () => gamePlayModule.checkAnswer(
-                          gamePlayModule.imageOptions[index], () => setState(() {})),
+                      onTap: () => _handleAnswer(gamePlayModule.imageOptions[index]),
                       child: Image.network(
                         gamePlayModule.imageOptions[index],
                         height: 150,
@@ -122,7 +159,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
             height: 50, // ✅ Standard banner ad height
             alignment: Alignment.center,
             child: bannerAdModule?.callMethod("getBannerWidget", [context]) ?? const SizedBox(),
-            ),
+          ),
       ],
     );
   }

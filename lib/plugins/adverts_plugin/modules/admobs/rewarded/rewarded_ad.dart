@@ -42,13 +42,16 @@ class RewardedAdModule extends ModuleBase {
   }
 
   /// Shows the rewarded ad
-  Future<void> showAd({required VoidCallback onUserEarnedReward}) async {
+  Future<void> showAd(Map<String, dynamic> args) async {
     if (_isAdReady && _rewardedAd != null) {
+      VoidCallback onUserEarnedReward = args["onUserEarnedReward"] ?? () {};
+
       _rewardedAd!.show(
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
           onUserEarnedReward();
         },
       );
+
       _rewardedAd = null;
       _isAdReady = false;
       loadAd(); // Preload next ad
@@ -56,6 +59,8 @@ class RewardedAdModule extends ModuleBase {
       print('Rewarded Ad not ready.');
     }
   }
+
+
 
   /// Disposes of the rewarded ad
   void dispose() {
