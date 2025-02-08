@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../core/00_base/screen_base.dart';
-import '../../../core/managers/app_manager.dart';
-import '../../../core/managers/module_manager.dart';
-import '../../../core/managers/services_manager.dart';
 import '../../../tools/logging/logger.dart';
 import '../modules/game_play_module/game_play_module.dart';
 
@@ -19,21 +16,15 @@ class GameScreen extends BaseScreen {
 }
 
 class GameScreenState extends BaseScreenState<GameScreen> {
-  final Logger logger = Logger();
-  final AppManager appManager = AppManager(); // ✅ Get AppManager Instance
-  late final ServicesManager servicesManager;
-  late final ModuleManager moduleManager;
   late final GamePlayModule gamePlayModule;
-  late final dynamic bannerAdModule;
   late final dynamic interstitialAdModule;
   late final dynamic rewardedAdModule;
 
   @override
   void initState() {
     super.initState();
-
+    Logger().info("Initializing GameScreen...");
     // ✅ Retrieve Managers from AppManager
-    servicesManager = appManager.servicesManager;
     moduleManager = appManager.moduleManager;
 
     // ✅ Retrieve GamePlayModule from ModuleManager
@@ -43,14 +34,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     gamePlayModule.fetchQuestion(() {
       setState(() {});
     });
-
-    // ✅ Retrieve Banner Ad Module
-    bannerAdModule = moduleManager.getModule('admobs_banner_ad_module');
-    if (bannerAdModule != null) {
-      bannerAdModule.callMethod("loadBannerAd");
-    } else {
-      logger.error("❌ BannerAdModule not found!");
-    }
 
     // ✅ Retrieve Interstitial Ad Module
     interstitialAdModule = moduleManager.getModule('admobs_interstitial_ad_module');
@@ -66,23 +49,23 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     if (gamePlayModule.feedbackMessage.contains("Correct")) {
       // ✅ Show interstitial ad if correct
       if (interstitialAdModule != null) {
-        logger.info("📢 Showing Interstitial Ad...");
+        Logger().info("📢 Showing Interstitial Ad...");
         interstitialAdModule.callMethod("showInterstitialAd");
       } else {
-        logger.error("❌ InterstitialAdModule not found!");
+        Logger().error("❌ InterstitialAdModule not found!");
       }
     } else {
       // ✅ Show rewarded ad if incorrect
       if (rewardedAdModule != null) {
-        logger.info("🎬 Showing Rewarded Ad for retry...");
+        Logger().info("🎬 Showing Rewarded Ad for retry...");
         rewardedAdModule.callMethod("showRewardedAd", {
           "onUserEarnedReward": () {
-            logger.info("🎁 User watched ad and earned a retry!");
+            Logger().info("🎁 User watched ad and earned a retry!");
           }
         });
 
       } else {
-        logger.error("❌ RewardedAdModule not found!");
+        Logger().error("❌ RewardedAdModule not found!");
       }
     }
   }
@@ -153,13 +136,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
           ),
         ),
 
-        // ✅ Banner Ad at Bottom
-        if (bannerAdModule != null)
-          Container(
-            height: 50, // ✅ Standard banner ad height
-            alignment: Alignment.center,
-            child: bannerAdModule?.callMethod("getBannerWidget", [context]) ?? const SizedBox(),
-          ),
       ],
     );
   }

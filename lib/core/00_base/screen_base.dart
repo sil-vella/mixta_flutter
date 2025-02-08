@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../tools/logging/logger.dart';
+import '../managers/app_manager.dart';
+import '../managers/module_manager.dart';
 import '../managers/navigation_manager.dart';
 
 abstract class BaseScreen extends StatefulWidget {
@@ -13,6 +16,28 @@ abstract class BaseScreen extends StatefulWidget {
 }
 
 abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
+  late final AppManager appManager;
+  late final ModuleManager moduleManager;
+  late final dynamic topBannerAdModule;
+  late final dynamic bottomBannerAdModule;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // ✅ Retrieve AppManager from Provider
+    appManager = Provider.of<AppManager>(context, listen: false);
+    moduleManager = appManager.moduleManager; // ✅ Use existing instance
+
+    // ✅ Retrieve Banner Ad Modules
+    topBannerAdModule = moduleManager.getModule('admobs_top_banner_ad_module');
+    bottomBannerAdModule = moduleManager.getModule('admobs_bottom_banner_ad_module');
+
+    // ✅ Preload banner ads
+    topBannerAdModule?.callMethod("loadBannerAd");
+    bottomBannerAdModule?.callMethod("loadBannerAd");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<NavigationContainer>(
