@@ -38,16 +38,14 @@ class HomeScreenState extends BaseScreenState<HomeScreen>
   }
 
   @override
-  @override
   Widget buildContent(BuildContext context) {
     final animationsModule = ModuleManager().getModule('animations_module');
     final stateManager = Provider.of<StateManager>(context, listen: false);
 
-    // Fetch stored username
-
-    // Update state when Play button is pressed
+    // Update state and navigate when Play button is pressed
     void onPlayPressed() {
       stateManager.updateMainAppState('main_state', 'in_play');
+      Navigator.pushNamed(context, '/game'); // ✅ Navigate to GameScreen
     }
 
     if (animationsModule == null) {

@@ -5,6 +5,7 @@ import '../managers/app_manager.dart';
 import '../managers/module_manager.dart';
 import '../managers/navigation_manager.dart';
 import '../../utils/consts/config.dart'; // ✅ Import AdMob Config
+import '../../utils/consts/theme_consts.dart'; // ✅ Import Theme Constants
 
 abstract class BaseScreen extends StatefulWidget {
   const BaseScreen({Key? key}) : super(key: key);
@@ -43,72 +44,84 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
-    return SafeArea( // ✅ Ensures the top banner is below the status bar
-      child: Column(
+    return Scaffold(
+      backgroundColor: AppColors.scaffoldBackgroundColor, // ✅ Apply Themed Background
+      appBar: AppBar(
+        title: Text(widget.computeTitle(context)),
+        backgroundColor: AppColors.primaryColor, // ✅ Themed AppBar
+      ),
+      drawer: Drawer(
+        child: Container(
+          color: AppColors.scaffoldBackgroundColor, // ✅ Themed Drawer Background
+          child: ListView(
+            children: [
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: AppColors.accentColor, // ✅ Themed Primary Color
+                ),
+                child: Center(
+                  child: Text(
+                    'Navigation Menu',
+                    style: TextStyle(
+                      color: AppColors.primaryColor, // ✅ Themed Text Color
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              ...Provider.of<NavigationContainer>(context, listen: false)
+                  .drawerItems
+                  .map(
+                    (item) => ListTile(
+                  leading: Icon(item.icon, color: AppColors.accentColor), // ✅ Themed Icon
+                  title: Text(
+                    item.label,
+                    style: TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, item.route);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      body: Column(
         children: [
-          // ✅ Top Banner Ad
+          // ✅ Top Banner Ad (Placed Under the AppBar)
           if (bannerAdModule != null)
             Container(
               height: 50,
               alignment: Alignment.center,
-              child: bannerAdModule.callMethod("getBannerWidget", [Config.admobsTopBanner, context]) ?? const SizedBox(),
+              child: bannerAdModule.callMethod(
+                "getBannerWidget",
+                [Config.admobsTopBanner, context],
+              ) ??
+                  const SizedBox(),
             ),
 
-          // ✅ Scaffold inside Column (So AppBar is Below Banner)
+          // ✅ Main Content
           Expanded(
-            child: Consumer<NavigationContainer>(
-              builder: (context, navigationContainer, child) {
-                return Scaffold(
-                  appBar: AppBar(
-                    title: Text(widget.computeTitle(context)),
-                  ),
-                  drawer: Drawer(
-                    child: ListView(
-                      children: [
-                        DrawerHeader(
-                          decoration: const BoxDecoration(color: Colors.blue),
-                          child: const Text(
-                            'Navigation Menu',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                            ),
-                          ),
-                        ),
-                        ...navigationContainer.drawerItems.map(
-                              (item) => ListTile(
-                            leading: Icon(item.icon),
-                            title: Text(item.label),
-                            onTap: () {
-                              Navigator.pop(context);
-                              Navigator.pushNamed(context, item.route);
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  body: Column(
-                    children: [
-                      Expanded(
-                        child: buildContent(context),
-                      ),
-
-                      // ✅ Bottom Banner Ad
-                      if (bannerAdModule != null)
-                        Container(
-                          height: 50,
-                          alignment: Alignment.center,
-                          child: bannerAdModule.callMethod("getBannerWidget", [Config.admobsBottomBanner, context]) ?? const SizedBox(),
-                        ),
-                    ],
-                  ),
-                );
-              },
-            ),
+            child: buildContent(context),
           ),
+
+          // ✅ Bottom Banner Ad
+          if (bannerAdModule != null)
+            Container(
+              height: 50,
+              alignment: Alignment.center,
+              child: bannerAdModule.callMethod(
+                "getBannerWidget",
+                [Config.admobsBottomBanner, context],
+              ) ??
+                  const SizedBox(),
+            ),
         ],
       ),
     );

@@ -1,4 +1,5 @@
-import 'package:flush_me_im_famous/plugins/game_plugin/screens/game_screen.dart';
+import 'package:flush_me_im_famous/plugins/game_plugin/modules/rewards_module/rewards_module.dart';
+import 'package:flush_me_im_famous/plugins/game_plugin/screens/game_screen/game_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/00_base/plugin_base.dart';
@@ -18,6 +19,7 @@ class GamePlugin extends PluginBase {
         super(hooksManager, moduleManager) {
     moduleMap.addAll({
       'question_module': () => QuestionModule(),
+      'rewards_module': () => RewardsModule(),
 
     });
 

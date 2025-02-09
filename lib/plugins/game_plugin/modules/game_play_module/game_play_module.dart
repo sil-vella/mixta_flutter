@@ -3,6 +3,7 @@ import '../../../../core/00_base/module_base.dart';
 import '../../../../core/managers/module_manager.dart';
 import '../../../../core/managers/services_manager.dart';
 import '../../../../tools/logging/logger.dart';
+import '../rewards_module/rewards_module.dart';
 
 class GamePlayModule extends ModuleBase {
   final Logger logger = Logger();
@@ -13,8 +14,9 @@ class GamePlayModule extends ModuleBase {
   List<String> imageOptions = []; // ✅ Store shuffled images
 
   /// Fetch user level and request a question from backend
-  Future<void> fetchQuestion(Function updateState) async {
-    final sharedPref = servicesManager.getService('shared_pref'); // ✅ Use SharedPref Service
+  Future<void> RoundInit(Function updateState) async {
+    final sharedPref = servicesManager.getService(
+        'shared_pref'); // ✅ Use SharedPref Service
     final questionModule = ModuleManager().getModule('question_module');
 
     if (sharedPref == null) {
@@ -29,7 +31,8 @@ class GamePlayModule extends ModuleBase {
 
     try {
       // ✅ Get user's level using `SharedPrefManager`
-      final level = await sharedPref.callServiceMethod('getInt', ['level']) ?? 1;
+      final level = await sharedPref.callServiceMethod('getInt', ['level']) ??
+          1;
       logger.info("🏆 User level retrieved from SharedPref: $level");
 
       // ✅ Fetch question based on level
@@ -42,7 +45,8 @@ class GamePlayModule extends ModuleBase {
         isLoading = false;
 
         // ✅ Prepare the shuffled images (correct + 3 distractors)
-        imageOptions = [response['image_url'], ...response['distractor_images']];
+        imageOptions =
+        [response['image_url'], ...response['distractor_images']];
         imageOptions.shuffle(Random()); // ✅ Randomize order
 
         // ✅ Update UI State in GameScreen
@@ -54,11 +58,29 @@ class GamePlayModule extends ModuleBase {
     }
   }
 
-  /// Check user's answer
-  void checkAnswer(String selectedImage, Function updateState) {
+  void checkAnswer(String selectedImage, Function updateState) async {
     final correctImage = question?['image_url'] ?? "";
 
-    feedbackMessage = selectedImage == correctImage ? "🎉 Correct!" : "❌ Wrong! Try Again.";
+    if (selectedImage == correctImage) {
+      feedbackMessage = "🎉 Correct!";
+
+      // ✅ Get RewardsModule from ModuleManager
+      final rewardsModule = ModuleManager().getModule<RewardsModule>('rewards_module');
+
+      if (rewardsModule != null) {
+        // ✅ First, get the points based on the action type
+        int points = await rewardsModule.getPoints('no_hint');
+
+        // ✅ Then, save the earned points
+        int totalPoints = await rewardsModule.saveReward(points);
+
+        logger.info("🏆 User earned $points points! New total: $totalPoints");
+      } else {
+        logger.error("❌ RewardsModule not found.");
+      }
+    } else {
+      feedbackMessage = "❌ Wrong! Try Again.";
+    }
 
     // ✅ Update UI State in GameScreen
     updateState();

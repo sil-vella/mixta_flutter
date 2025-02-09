@@ -1,7 +1,7 @@
 import 'package:flush_me_im_famous/core/managers/state_manager.dart';
 import 'package:flush_me_im_famous/plugins/adverts_plugin/adverts_plugin_main.dart';
 import 'package:flush_me_im_famous/plugins/game_plugin/game_plugin_main.dart';
-import 'package:flush_me_im_famous/plugins/game_plugin/screens/game_screen.dart';
+import 'package:flush_me_im_famous/plugins/game_plugin/screens/game_screen/game_screen.dart';
 import 'package:flush_me_im_famous/plugins/main_plugin/main_plugin_main.dart';
 import '../tools/logging/logger.dart';
 import '../core/managers/plugin_manager.dart';
