@@ -49,7 +49,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
       backgroundColor: AppColors.scaffoldBackgroundColor, // ✅ Apply Themed Background
       appBar: AppBar(
         title: Text(widget.computeTitle(context)),
-        backgroundColor: AppColors.primaryColor, // ✅ Themed AppBar
+        backgroundColor: AppColors.accentColor, // ✅ Themed AppBar
       ),
       drawer: Drawer(
         child: Container(
@@ -96,15 +96,15 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
         children: [
           // ✅ Top Banner Ad (Placed Under the AppBar)
           if (bannerAdModule != null)
-            Container(
+            SizedBox(
               height: 50,
-              alignment: Alignment.center,
               child: bannerAdModule.callMethod(
                 "getBannerWidget",
                 [Config.admobsTopBanner, context],
               ) ??
                   const SizedBox(),
             ),
+
 
           // ✅ Main Content
           Expanded(
@@ -113,9 +113,8 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
 
           // ✅ Bottom Banner Ad
           if (bannerAdModule != null)
-            Container(
+            SizedBox(
               height: 50,
-              alignment: Alignment.center,
               child: bannerAdModule.callMethod(
                 "getBannerWidget",
                 [Config.admobsBottomBanner, context],

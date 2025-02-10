@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'dart:math';
 import '../../../../core/00_base/screen_base.dart';
 import '../../../../core/managers/services_manager.dart';
 import '../../../../tools/logging/logger.dart';
+import '../../../main_plugin/modules/main_helper_module/main_helper_module.dart';
 import '../../modules/game_play_module/game_play_module.dart';
 import 'components/fact_box.dart';
 import 'components/feedback_message.dart';
@@ -27,8 +29,10 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   Timer? _feedbackTimer;
   int _level = 1;
   int _points = 0;
+  String _backgroundImage = ""; // ✅ Stores the random background
 
   final ServicesManager _servicesManager = ServicesManager();
+  final Random _random = Random();
 
   @override
   void initState() {
@@ -38,10 +42,8 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     // ✅ Retrieve GamePlayModule from ModuleManager
     gamePlayModule = moduleManager.getModule('game_play_module') ?? GamePlayModule();
 
-    // ✅ Fetch question data
-    gamePlayModule.RoundInit(() {
-      setState(() {});
-    });
+    // ✅ Fetch question data and update background
+    _initializeGame();
 
     // ✅ Load level and points
     _loadLevelAndPoints();
@@ -67,6 +69,22 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     Logger().info("📊 Loaded Level: $_level | Points: $_points");
   }
 
+  /// ✅ Initializes game and updates the random background
+  void _initializeGame() {
+    _setRandomBackground();
+    gamePlayModule.RoundInit(() {
+      setState(() {});
+    });
+  }
+
+  /// ✅ Select a new random background
+  void _setRandomBackground() {
+    setState(() {
+      _backgroundImage = MainHelperModule.getRandomBackground();
+    });
+    Logger().info("🎨 New Background: $_backgroundImage");
+  }
+
   /// ✅ Reusable function to update feedback state
   void _updateFeedbackState({required bool showFeedback, String feedbackText = ""}) {
     setState(() {
@@ -79,10 +97,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
       _feedbackTimer?.cancel();
       _feedbackTimer = Timer(const Duration(seconds: 2), () {
         if (mounted) {
-          _updateFeedbackState(showFeedback: false);
-          gamePlayModule.RoundInit(() {
-            setState(() {});
-          });
+          _closeFeedback();
         }
       });
     }
@@ -96,19 +111,27 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     });
   }
 
-  /// ✅ Manually close feedback
+  /// ✅ Manually close feedback and reset the game + background
   void _closeFeedback() {
     _updateFeedbackState(showFeedback: false);
     _feedbackTimer?.cancel();
-    gamePlayModule.RoundInit(() {
-      setState(() {});
-    });
+    _initializeGame(); // ✅ Reset game and change background
   }
 
   @override
   Widget buildContent(BuildContext context) {
     return Stack(
       children: [
+        // ✅ Background Image
+        Positioned.fill(
+          child: _backgroundImage.isNotEmpty
+              ? Image.asset(
+            _backgroundImage,
+            fit: BoxFit.cover,
+          )
+              : Container(color: Colors.black), // Fallback background
+        ),
+
         Column(
           children: [
             // ✅ Top bar showing Level and Points

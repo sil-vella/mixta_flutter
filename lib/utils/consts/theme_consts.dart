@@ -5,11 +5,20 @@ import 'package:flutter/material.dart';
 class AppColors {
   static const Color primaryColor = Color(0xFF1C1B2E); // Dark Slate Blue (Background)
   static const Color accentColor = Color(0xFFCB9C50); // 🌟 Gold Accent
-  static const Color accentColor2 = Color(0xFFE4B96F); // ✨ Softer Gold for Highlights
+  static const Color accentColor2 = Color(0xFFB8860B); // 🎨 Rich Dark Gold
   static const Color scaffoldBackgroundColor = Color(0xFF121212); // 🔥 Deep Black for OLED Displays
   static const Color white = Colors.white;
   static const Color lightGray = Color(0xFFB0BEC5); // 🌫 Cool Gray for Subtle Text
   static const Color redAccent = Colors.redAccent; // ⚠️ Error Color (Kept as-is)
+}
+
+class AppBackgrounds {
+  static const String _path = 'assets/images/backgrounds/';
+
+  static const List<String> backgrounds = [
+    '${_path}main_background_01.jpg',
+    '${_path}main_background_02.jpg',
+  ];
 }
 
 class AppTextStyles {

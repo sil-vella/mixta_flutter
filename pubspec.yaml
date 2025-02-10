@@ -29,6 +29,8 @@ flutter:
 
   assets:
     - assets/
+    - assets/images/
+    - assets/images/backgrounds/
 
 
 flutter_native_splash:
