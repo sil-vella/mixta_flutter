@@ -5,6 +5,7 @@ import '../../../core/00_base/screen_base.dart';
 import '../../../core/managers/app_manager.dart';
 import '../../../core/managers/module_manager.dart';
 import '../../../core/managers/state_manager.dart';
+import '../modules/main_helper_module/main_helper_module.dart'; // ✅ Import Helper Module
 
 class HomeScreen extends BaseScreen {
   const HomeScreen({Key? key}) : super(key: key);
@@ -21,10 +22,15 @@ class HomeScreen extends BaseScreen {
 class HomeScreenState extends BaseScreenState<HomeScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  late String _backgroundImage; // ✅ Stores the background image
 
   @override
   void initState() {
     super.initState();
+
+    // ✅ Set a random background on screen load
+    _backgroundImage = MainHelperModule.getRandomBackground();
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -52,29 +58,43 @@ class HomeScreenState extends BaseScreenState<HomeScreen>
       return const Center(child: Text("Required modules are not available."));
     }
 
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          animationsModule.callMethod(
-            'applyBounceAnimation',
-            [],
-            {
-              'child': Text(
-                'Welcome to the Mixta Game!',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    return Stack(
+      children: [
+        // ✅ Full-Screen Background Image
+        Positioned.fill(
+          child: _backgroundImage.isNotEmpty
+              ? Image.asset(
+            _backgroundImage,
+            fit: BoxFit.cover,
+          )
+              : Container(color: Colors.black), // Fallback background
+        ),
+
+        // ✅ Foreground Content
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              animationsModule.callMethod(
+                'applyBounceAnimation',
+                [],
+                {
+                  'child': Text(
+                    'Welcome to the Mixta Game!',
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  'controller': _controller,
+                },
               ),
-              'controller': _controller,
-            },
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: onPlayPressed,
+                child: const Text('Play'),
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: onPlayPressed,
-            child: const Text('Play'),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
-
 }

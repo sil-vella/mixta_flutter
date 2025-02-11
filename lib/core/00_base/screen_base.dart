@@ -48,9 +48,15 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackgroundColor, // ✅ Apply Themed Background
       appBar: AppBar(
-        title: Text(widget.computeTitle(context)),
-        backgroundColor: AppColors.accentColor, // ✅ Themed AppBar
+        title: Text(
+          widget.computeTitle(context),
+          style: AppTextStyles.headingMedium(color: AppColors.darkGray), // ✅ Dark Gray Title
+        ),
+        backgroundColor: AppColors.accentColor, // ✅ Themed Gold Background
+        iconTheme: IconThemeData(color: AppColors.darkGray), // ✅ Change Burger Menu Color
       ),
+
+
       drawer: Drawer(
         child: Container(
           color: AppColors.scaffoldBackgroundColor, // ✅ Themed Drawer Background
@@ -96,14 +102,17 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
         children: [
           // ✅ Top Banner Ad (Placed Under the AppBar)
           if (bannerAdModule != null)
-            SizedBox(
+            Container(
               height: 50,
+              alignment: Alignment.center,
+              color: Colors.black,
               child: bannerAdModule.callMethod(
                 "getBannerWidget",
                 [Config.admobsTopBanner, context],
               ) ??
                   const SizedBox(),
             ),
+
 
 
           // ✅ Main Content
@@ -113,14 +122,17 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
 
           // ✅ Bottom Banner Ad
           if (bannerAdModule != null)
-            SizedBox(
+            Container(
               height: 50,
+              alignment: Alignment.center,
+              color: Colors.black,
               child: bannerAdModule.callMethod(
                 "getBannerWidget",
                 [Config.admobsBottomBanner, context],
               ) ??
                   const SizedBox(),
             ),
+
         ],
       ),
     );

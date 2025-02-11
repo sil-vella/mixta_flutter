@@ -26,6 +26,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   late final GamePlayModule gamePlayModule;
   bool _showFeedback = false; // ✅ Controls overlay visibility
   String _feedbackText = ""; // ✅ Stores feedback message
+  String? _selectedImageUrl; // ✅ Stores the chosen image URL
   Timer? _feedbackTimer;
   int _level = 1;
   int _points = 0;
@@ -85,6 +86,22 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     Logger().info("🎨 New Background: $_backgroundImage");
   }
 
+  /// ✅ Handles answer selection, updates points, and stores the selected image URL
+  void _handleAnswer(String selectedImage) {
+    setState(() {
+      _selectedImageUrl = selectedImage; // ✅ Store the selected image
+    });
+
+    gamePlayModule.checkAnswer(selectedImage, () {
+      _updateFeedbackState(
+        showFeedback: true,
+        feedbackText: gamePlayModule.feedbackMessage,
+      );
+
+      _loadLevelAndPoints(); // ✅ Refresh level and points after update
+    });
+  }
+
   /// ✅ Reusable function to update feedback state
   void _updateFeedbackState({required bool showFeedback, String feedbackText = ""}) {
     setState(() {
@@ -103,19 +120,14 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     }
   }
 
-  /// ✅ Handles answer selection, updates points
-  void _handleAnswer(String selectedImage) {
-    gamePlayModule.checkAnswer(selectedImage, () {
-      _updateFeedbackState(showFeedback: true, feedbackText: gamePlayModule.feedbackMessage);
-      _loadLevelAndPoints(); // Refresh level and points after update
-    });
-  }
-
   /// ✅ Manually close feedback and reset the game + background
   void _closeFeedback() {
     _updateFeedbackState(showFeedback: false);
     _feedbackTimer?.cancel();
     _initializeGame(); // ✅ Reset game and change background
+    setState(() {
+      _selectedImageUrl = null; // ✅ Reset the selected image
+    });
   }
 
   @override
@@ -186,6 +198,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
             child: FeedbackMessage(
               feedback: _feedbackText,
               onClose: _closeFeedback, // ✅ Pass close method
+              selectedImageUrl: _selectedImageUrl, // ✅ Pass selected image to FeedbackMessage
             ),
           ),
       ],

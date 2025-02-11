@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 class AppColors {
   static const Color primaryColor = Color(0xFF1C1B2E); // Dark Slate Blue (Background)
   static const Color accentColor = Color(0xFFCB9C50); // 🌟 Gold Accent
-  static const Color accentColor2 = Color(0xFFB8860B); // 🎨 Rich Dark Gold
+  static const Color accentColor2 = Color(0xFF7A1C28);
   static const Color scaffoldBackgroundColor = Color(0xFF121212); // 🔥 Deep Black for OLED Displays
   static const Color white = Colors.white;
+  static const Color darkGray = Color(0xFF333333); // 🎨 Deep Charcoal Gray
   static const Color lightGray = Color(0xFFB0BEC5); // 🌫 Cool Gray for Subtle Text
   static const Color redAccent = Colors.redAccent; // ⚠️ Error Color (Kept as-is)
 }
@@ -16,27 +17,56 @@ class AppBackgrounds {
   static const String _path = 'assets/images/backgrounds/';
 
   static const List<String> backgrounds = [
-    '${_path}main_background_01.jpg',
-    '${_path}main_background_02.jpg',
+    '${_path}gamescreen_background_01.jpg',
+    '${_path}gamescreen_background_02.jpg',
+    '${_path}gamescreen_background_03.jpg',
+    '${_path}gamescreen_background_04.jpg',
+    '${_path}gamescreen_background_05.jpg',
   ];
 }
 
 class AppTextStyles {
-  static const TextStyle displayLarge = TextStyle(
-    fontSize: 32,
-    fontWeight: FontWeight.bold,
-    color: AppColors.white,
-  );
+  // ✅ Heading Styles with Custom Color
+  static TextStyle headingLarge({Color color = AppColors.accentColor}) {
+    return TextStyle(
+      fontSize: 28,
+      fontWeight: FontWeight.bold,
+      color: color, // 🎨 Dynamic Color
+    );
+  }
 
+  static TextStyle headingMedium({Color color = AppColors.accentColor}) {
+    return TextStyle(
+      fontSize: 24,
+      fontWeight: FontWeight.w600,
+      color: color, // 🎨 Dynamic Color
+    );
+  }
+
+  static TextStyle headingSmall({Color color = AppColors.accentColor}) {
+    return TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w500,
+      color: color, // 🎨 Dynamic Color
+    );
+  }
+
+  // ✅ Body Text (Fixed White Color)
   static const TextStyle bodyMedium = TextStyle(
     fontSize: 16,
     color: AppColors.white,
   );
 
+  static const TextStyle bodyLarge = TextStyle(
+    fontSize: 18,
+    color: AppColors.lightGray, // 💡 Light Gray for Less Prominent Text
+  );
+
+  // ✅ Button Text
   static const TextStyle buttonText = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w600,
-    color: AppColors.white, // Use white text for buttons
+    color: AppColors.white, // White text for buttons
   );
 }
 

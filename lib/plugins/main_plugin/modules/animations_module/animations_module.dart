@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:confetti/confetti.dart';
 import '../../../../core/00_base/module_base.dart';
 import '../../../../tools/logging/logger.dart';
 
@@ -7,6 +8,7 @@ class AnimationsModule extends ModuleBase {
 
   // List to store animation controllers for cleanup
   final List<AnimationController> _controllers = [];
+  final Map<String, ConfettiController> _confettiControllers = {}; // ✅ Store confetti controllers
 
   AnimationsModule._internal() {
     Logger().info('AnimationsModule instance created.');
@@ -24,13 +26,13 @@ class AnimationsModule extends ModuleBase {
     return _instance!;
   }
 
-  /// Registers animation methods with the module
   void _registerAnimationMethods() {
     Logger().info('Registering animation methods in AnimationsModule.');
     registerMethod('applyFadeAnimation', applyFadeAnimation);
     registerMethod('applyScaleAnimation', applyScaleAnimation);
     registerMethod('applySlideAnimation', applySlideAnimation);
-    registerMethod('applyBounceAnimation', applyBounceAnimation); // New bounce animation
+    registerMethod('applyBounceAnimation', applyBounceAnimation);
+    registerMethod('playConfetti', (String key) => playConfetti(key: key)); // ✅ Correct function signature
     Logger().info('Animation methods registered successfully.');
   }
 
@@ -45,9 +47,14 @@ class AnimationsModule extends ModuleBase {
         controller.stop(); // Stop any ongoing animations
       }
       controller.dispose(); // Dispose the controller
-      Logger().info('Disposed AnimationController: $controller');
     }
     _controllers.clear();
+
+    // Dispose all confetti controllers
+    for (final confettiController in _confettiControllers.values) {
+      confettiController.dispose();
+    }
+    _confettiControllers.clear();
 
     super.dispose();
   }
@@ -57,6 +64,17 @@ class AnimationsModule extends ModuleBase {
     _controllers.add(controller);
     Logger().info('Registered AnimationController: $controller');
   }
+
+  /// ✅ Method to trigger confetti animation
+  void playConfetti({required String key}) {
+    if (!_confettiControllers.containsKey(key)) {
+      _confettiControllers[key] = ConfettiController(duration: const Duration(seconds: 2));
+    }
+
+    _confettiControllers[key]!.play();
+    Logger().info('🎉 Confetti started: $key');
+  }
+
 
   /// Applies fade animation to the provided widget
   Widget applyFadeAnimation({

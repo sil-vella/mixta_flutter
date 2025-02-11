@@ -1,58 +1,125 @@
 import 'package:flutter/material.dart';
+import 'package:confetti/confetti.dart';
+import '../../../../../core/managers/module_manager.dart';
 import '../../../../../utils/consts/theme_consts.dart';
 
-class FeedbackMessage extends StatelessWidget {
+class FeedbackMessage extends StatefulWidget {
   final String feedback;
-  final VoidCallback onClose; // ✅ Callback to close feedback
+  final VoidCallback onClose;
+  final String? selectedImageUrl;
 
   const FeedbackMessage({
     Key? key,
     required this.feedback,
-    required this.onClose, // ✅ Required close function
+    required this.onClose,
+    this.selectedImageUrl,
   }) : super(key: key);
 
   @override
+  _FeedbackMessageState createState() => _FeedbackMessageState();
+}
+
+class _FeedbackMessageState extends State<FeedbackMessage> {
+  late ConfettiController _confettiController;
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+
+    if (widget.feedback.contains("Correct")) {
+      _confettiController.play();
+    }
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black.withOpacity(0.8), // ✅ Dark background overlay
+    bool isCorrect = widget.feedback.contains("Correct");
+
+    return Stack(
       alignment: Alignment.center,
-      child: Column(
-        mainAxisSize: MainAxisSize.min, // ✅ Keep the content centered
-        children: [
-          // ✅ Feedback text
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Text(
-              feedback,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: feedback.contains("Correct") ? AppColors.accentColor : Colors.redAccent,
+      children: [
+        // ✅ Background Overlay
+        Container(
+          color: Colors.black.withOpacity(0.8),
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ✅ Display Selected Image ONLY IF Answer is Correct
+              if (isCorrect && widget.selectedImageUrl != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Image.network(
+                    widget.selectedImageUrl!,
+                    height: 120,
+                    width: 120,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.broken_image,
+                      size: 100,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+
+              // ✅ Feedback text
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Text(
+                  widget.feedback,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: isCorrect ? AppColors.accentColor : Colors.redAccent,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ✅ Close Button
+              ElevatedButton(
+                onPressed: widget.onClose,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accentColor,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                ),
+                child: const Text("Close", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+
+        // ✅ Confetti Animation (Only if Correct)
+        if (isCorrect)
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.20, // ✅ 1/4 from the top
+            left: 0,
+            right: 0,  // ✅ Ensures full width for centering
+            child: Align(
+              alignment: Alignment.topCenter,  // ✅ Center it horizontally
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                emissionFrequency: 0.15,
+                numberOfParticles: 15,
+                maxBlastForce: 20,
+                minBlastForce: 10,
+                gravity: 0.1,
               ),
             ),
           ),
-
-          const SizedBox(height: 20),
-
-          // ✅ Close Button (Below Text)
-          ElevatedButton(
-            onPressed: onClose, // ✅ Call onClose method
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accentColor, // ✅ Themed button
-              foregroundColor: Colors.black, // ✅ Contrast text
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0), // ✅ Rounded corners
-              ),
-            ),
-            child: const Text(
-              "Close",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }
