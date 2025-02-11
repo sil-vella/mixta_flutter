@@ -1,4 +1,4 @@
-import 'package:flush_me_im_famous/core/managers/plugin_manager.dart';
+import 'package:guess_the_celebrity/core/managers/plugin_manager.dart';
 import 'package:flutter/material.dart';
 import '../../plugins/plugin_registry.dart';
 import '../services/shared_preferences.dart';

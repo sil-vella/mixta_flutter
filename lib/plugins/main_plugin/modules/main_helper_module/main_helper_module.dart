@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import '../../../../core/00_base/module_base.dart';
 import '../../../../core/managers/services_manager.dart';
@@ -86,5 +87,16 @@ class MainHelperModule extends ModuleBase {
       _logger.error('SharedPrefManager not available.');
     }
     return null;
+  }
+
+  /// ✅ Timer method that executes a callback after [seconds] delay
+  void startTimer(int seconds, Function callback) {
+    _logger.info("⏳ Timer started for $seconds seconds...");
+
+
+    Timer(Duration(seconds: seconds), () {
+      _logger.info("✅ Timer completed after $seconds seconds.");
+      callback(); // Execute callback function
+    });
   }
 }

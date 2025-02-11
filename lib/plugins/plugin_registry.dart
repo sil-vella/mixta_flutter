@@ -1,8 +1,8 @@
-import 'package:flush_me_im_famous/core/managers/state_manager.dart';
-import 'package:flush_me_im_famous/plugins/adverts_plugin/adverts_plugin_main.dart';
-import 'package:flush_me_im_famous/plugins/game_plugin/game_plugin_main.dart';
-import 'package:flush_me_im_famous/plugins/game_plugin/screens/game_screen/game_screen.dart';
-import 'package:flush_me_im_famous/plugins/main_plugin/main_plugin_main.dart';
+import 'package:guess_the_celebrity/core/managers/state_manager.dart';
+import 'package:guess_the_celebrity/plugins/adverts_plugin/adverts_plugin_main.dart';
+import 'package:guess_the_celebrity/plugins/game_plugin/game_plugin_main.dart';
+import 'package:guess_the_celebrity/plugins/game_plugin/screens/game_screen/game_screen.dart';
+import 'package:guess_the_celebrity/plugins/main_plugin/main_plugin_main.dart';
 import '../tools/logging/logger.dart';
 import '../core/managers/plugin_manager.dart';
 import '../core/managers/navigation_manager.dart';

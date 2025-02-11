@@ -1,8 +1,9 @@
-import 'package:flush_me_im_famous/core/managers/navigation_manager.dart';
-import 'package:flush_me_im_famous/plugins/main_plugin/modules/animations_module/animations_module.dart';
-import 'package:flush_me_im_famous/plugins/main_plugin/modules/main_helper_module/main_helper_module.dart';
-import 'package:flush_me_im_famous/plugins/main_plugin/screens/home_screen.dart';
-import 'package:flush_me_im_famous/plugins/main_plugin/screens/preferences_screen.dart';
+import 'package:guess_the_celebrity/core/managers/navigation_manager.dart';
+import 'package:guess_the_celebrity/plugins/main_plugin/modules/animations_module/animations_module.dart';
+import 'package:guess_the_celebrity/plugins/main_plugin/modules/login_module/login_module.dart';
+import 'package:guess_the_celebrity/plugins/main_plugin/modules/main_helper_module/main_helper_module.dart';
+import 'package:guess_the_celebrity/plugins/main_plugin/screens/home_screen.dart';
+import 'package:guess_the_celebrity/plugins/main_plugin/screens/preferences_screen/preferences_screen.dart';
 import 'package:flutter/material.dart';
 import '../../core/00_base/plugin_base.dart';
 import '../../core/managers/module_manager.dart';
@@ -18,6 +19,7 @@ class MainPlugin extends PluginBase {
       'connection_module': () => ConnectionsModule(Config.apiUrl),
       'animations_module': () => AnimationsModule(),
       'main_helper_module': () => MainHelperModule(),
+      'login_module': () => LoginModule(),
     });
 
     // Add hooks directly in hookMap

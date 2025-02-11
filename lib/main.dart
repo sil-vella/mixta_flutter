@@ -1,7 +1,7 @@
-import 'package:flush_me_im_famous/core/managers/services_manager.dart';
-import 'package:flush_me_im_famous/plugins/main_plugin/screens/home_screen.dart';
-import 'package:flush_me_im_famous/utils/consts/theme_consts.dart';
-import 'package:flush_me_im_famous/utils/consts/config.dart';
+import 'package:guess_the_celebrity/core/managers/services_manager.dart';
+import 'package:guess_the_celebrity/plugins/main_plugin/screens/home_screen.dart';
+import 'package:guess_the_celebrity/utils/consts/theme_consts.dart';
+import 'package:guess_the_celebrity/utils/consts/config.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/managers/app_manager.dart';

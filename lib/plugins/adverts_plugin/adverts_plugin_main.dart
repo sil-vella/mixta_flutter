@@ -1,6 +1,6 @@
-import 'package:flush_me_im_famous/plugins/adverts_plugin/modules/admobs/banner/banner_ad.dart';
-import 'package:flush_me_im_famous/plugins/adverts_plugin/modules/admobs/interstitial/interstitial_ad.dart';
-import 'package:flush_me_im_famous/plugins/adverts_plugin/modules/admobs/rewarded/rewarded_ad.dart';
+import 'package:guess_the_celebrity/plugins/adverts_plugin/modules/admobs/banner/banner_ad.dart';
+import 'package:guess_the_celebrity/plugins/adverts_plugin/modules/admobs/interstitial/interstitial_ad.dart';
+import 'package:guess_the_celebrity/plugins/adverts_plugin/modules/admobs/rewarded/rewarded_ad.dart';
 import 'package:flutter/material.dart';
 import '../../core/00_base/plugin_base.dart';
 import '../../core/managers/hooks_manager.dart';

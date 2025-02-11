@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:label="Flush Me I Am Famous"
+        android:label="Guess The Celebrity"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -22,6 +22,6 @@
         </activity>
         <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3883219611722888~4477217543" />
         <meta-data android:name="flutterEmbedding" android:value="2" />
-        <meta-data android:name="privacy_policy_url" android:value="https://fmif.reignofplay.com/legal/policy.html" />
+        <meta-data android:name="privacy_policy_url" android:value="https://gtc.mixta.mt/legal/policy.html" />
     </application>
 </manifest>

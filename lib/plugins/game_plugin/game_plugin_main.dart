@@ -1,6 +1,8 @@
-import 'package:flush_me_im_famous/plugins/game_plugin/modules/rewards_module/rewards_module.dart';
-import 'package:flush_me_im_famous/plugins/game_plugin/screens/game_screen/game_screen.dart';
+import 'package:guess_the_celebrity/plugins/game_plugin/modules/leaderboard_module/leaderboard_module.dart';
+import 'package:guess_the_celebrity/plugins/game_plugin/modules/rewards_module/rewards_module.dart';
+import 'package:guess_the_celebrity/plugins/game_plugin/screens/game_screen/game_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:guess_the_celebrity/plugins/game_plugin/screens/leaderboard_screen/leaderboard_screen.dart';
 
 import '../../core/00_base/plugin_base.dart';
 import '../../core/managers/hooks_manager.dart';
@@ -20,7 +22,7 @@ class GamePlugin extends PluginBase {
     moduleMap.addAll({
       'question_module': () => QuestionModule(),
       'rewards_module': () => RewardsModule(),
-
+      'leaderboard_module': () => LeaderboardModule(),
     });
 
     hookMap.addAll({
@@ -33,6 +35,12 @@ class GamePlugin extends PluginBase {
         navigationContainer.registerNavItem(DrawerItem(
           label: 'Guess the Actor',
           route: '/game',
+          icon: Icons.quiz,
+        ));
+        navigationContainer.registerRoute('/leaderboard', (context) => LeaderboardScreen());
+        navigationContainer.registerNavItem(DrawerItem(
+          label: 'Leaderboard',
+          route: '/leaderboard',
           icon: Icons.quiz,
         ));
       },

@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'package:guess_the_celebrity/plugins/main_plugin/modules/main_helper_module/main_helper_module.dart';
+
 import '../../../../core/00_base/module_base.dart';
 import '../../../../core/managers/module_manager.dart';
 import '../../../../core/managers/services_manager.dart';
@@ -7,15 +9,18 @@ import '../rewards_module/rewards_module.dart';
 
 class GamePlayModule extends ModuleBase {
   final Logger logger = Logger();
-  final ServicesManager servicesManager = ServicesManager(); // ✅ Get Shared Pref Service
+  final ServicesManager _servicesManager = ServicesManager();
+  final MainHelperModule _mainHelperModule = MainHelperModule();
+
+
   Map<String, dynamic>? question;
   bool isLoading = true;
   String feedbackMessage = "";
   List<String> imageOptions = []; // ✅ Store shuffled images
 
   /// Fetch user level and request a question from backend
-  Future<void> RoundInit(Function updateState) async {
-    final sharedPref = servicesManager.getService(
+  Future<void> roundInit(Function updateState) async {
+    final sharedPref = _servicesManager.getService(
         'shared_pref'); // ✅ Use SharedPref Service
     final questionModule = ModuleManager().getModule('question_module');
 
@@ -58,33 +63,52 @@ class GamePlayModule extends ModuleBase {
     }
   }
 
-  void checkAnswer(String selectedImage, Function updateState) async {
-    final correctImage = question?['image_url'] ?? "";
+  Future<void> setTimer(Function onTimeout) async {
+    final sharedPref = _servicesManager.getService('shared_pref');
 
-    if (selectedImage == correctImage) {
-      feedbackMessage = "🎉 Correct!";
-
-      // ✅ Get RewardsModule from ModuleManager
-      final rewardsModule = ModuleManager().getModule<RewardsModule>('rewards_module');
-
-      if (rewardsModule != null) {
-        // ✅ First, get the points based on the action type
-        int points = await rewardsModule.getPoints('no_hint');
-
-        // ✅ Then, save the earned points
-        int totalPoints = await rewardsModule.saveReward(points);
-
-        logger.info("🏆 User earned $points points! New total: $totalPoints");
-      } else {
-        logger.error("❌ RewardsModule not found.");
-      }
-    } else {
-      feedbackMessage = "❌ Wrong! Try Again.";
+    if (sharedPref == null) {
+      logger.error("❌ SharedPrefManager not found!");
+      return;
     }
 
-    // ✅ Update UI State in GameScreen
-    updateState();
+    try {
+      final level = await sharedPref.callServiceMethod('getInt', ['level']) ?? 1;
 
-    logger.info("✅ User selected: $selectedImage | Correct: $correctImage");
+      _mainHelperModule.startTimer(5, () {
+        logger.info("⏰ Timer finished! Triggering timeout answer.");
+        onTimeout(); // ✅ Now directly calls _handleAnswer from GameScreen
+      });
+
+    } catch (e) {
+      logger.error("❌ Failed to start timer: $e", error: e);
+    }
   }
+
+  void checkAnswer(String selectedImage, Function updateState, {bool timeUp = false}) async {
+    if (timeUp) {
+      feedbackMessage = "⏳ Time's up!";
+    } else {
+      final correctImage = question?['image_url'] ?? "";
+      if (selectedImage == correctImage) {
+        feedbackMessage = "🎉 Correct!";
+
+        final rewardsModule = ModuleManager().getModule<RewardsModule>('rewards_module');
+        if (rewardsModule != null) {
+          int points = await rewardsModule.getPoints('no_hint');
+          int totalPoints = await rewardsModule.saveReward(points);
+          logger.info("🏆 User earned $points points! New total: $totalPoints");
+        } else {
+          logger.error("❌ RewardsModule not found.");
+        }
+      } else {
+        feedbackMessage = "❌ Wrong! Try Again.";
+      }
+    }
+
+    updateState();
+    logger.info("✅ User selected: $selectedImage | Correct: ${question?['image_url']}");
+
+    // ✅ Round will reinitialize after user closes the feedback message
+  }
+
 }

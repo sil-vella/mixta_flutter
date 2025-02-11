@@ -1,3 +1,4 @@
+import 'dart:async';
 import '../../../../core/00_base/module_base.dart';
 import '../../../../core/managers/services_manager.dart';
 import '../../../../tools/logging/logger.dart';
@@ -10,7 +11,7 @@ class FunctionHelperModule extends ModuleBase {
     Logger().info('FunctionHelperModule initialized.');
   }
 
-  /// Factory method to ensure singleton
+  /// ✅ Factory method to ensure singleton
   factory FunctionHelperModule() {
     _instance ??= FunctionHelperModule._internal();
     return _instance!;

@@ -1,4 +1,4 @@
-package com.reignofplay.fmif
+package com.mixta.gtc
 
 import io.flutter.embedding.android.FlutterActivity
 

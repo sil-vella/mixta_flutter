@@ -33,6 +33,8 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   String _backgroundImage = ""; // ✅ Stores the random background
 
   final ServicesManager _servicesManager = ServicesManager();
+  final MainHelperModule _mainHelperModule = MainHelperModule();
+
   final Random _random = Random();
 
   @override
@@ -73,23 +75,20 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   /// ✅ Initializes game and updates the random background
   void _initializeGame() {
     _setRandomBackground();
-    gamePlayModule.RoundInit(() {
+    gamePlayModule.roundInit(() {
       setState(() {});
     });
-  }
 
-  /// ✅ Select a new random background
-  void _setRandomBackground() {
-    setState(() {
-      _backgroundImage = MainHelperModule.getRandomBackground();
+    // ✅ Set Timer - now triggers _handleAnswer when time is up
+    gamePlayModule.setTimer(() {
+      _handleAnswer("", timeUp: true);
     });
-    Logger().info("🎨 New Background: $_backgroundImage");
   }
 
-  /// ✅ Handles answer selection, updates points, and stores the selected image URL
-  void _handleAnswer(String selectedImage) {
+  /// ✅ Handles answer selection and timeout scenario
+  void _handleAnswer(String selectedImage, {bool timeUp = false}) {
     setState(() {
-      _selectedImageUrl = selectedImage; // ✅ Store the selected image
+      _selectedImageUrl = selectedImage;
     });
 
     gamePlayModule.checkAnswer(selectedImage, () {
@@ -99,7 +98,15 @@ class GameScreenState extends BaseScreenState<GameScreen> {
       );
 
       _loadLevelAndPoints(); // ✅ Refresh level and points after update
+    }, timeUp: timeUp);
+  }
+
+  /// ✅ Select a new random background
+  void _setRandomBackground() {
+    setState(() {
+      _backgroundImage = MainHelperModule.getRandomBackground();
     });
+    Logger().info("🎨 New Background: $_backgroundImage");
   }
 
   /// ✅ Reusable function to update feedback state

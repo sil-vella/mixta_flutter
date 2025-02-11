@@ -18,19 +18,15 @@ abstract class ModuleBase {
     if (_methodMap.containsKey(methodName)) {
       final method = _methodMap[methodName]!;
 
-      // If no args, pass an empty list
-      if (args == null) {
-        return Function.apply(method, [], namedArgs?.map((key, value) => MapEntry(Symbol(key), value)));
-      }
-
-      // If args is not a list, wrap it into a list
-      final List<dynamic> positionalArgs = args is List ? args : [args];
+      // Ensure args is always a List
+      final List<dynamic> positionalArgs = (args is List) ? args : (args != null ? [args] : []);
 
       return Function.apply(method, positionalArgs, namedArgs?.map((key, value) => MapEntry(Symbol(key), value)));
     } else {
       throw Exception('Method "$methodName" not found in ${this.runtimeType}.');
     }
   }
+
 
 
   /// Dispose method to clean up resources

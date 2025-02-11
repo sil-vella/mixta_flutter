@@ -23,7 +23,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "com.reignofplay.fmif"
+    namespace "com.mixta.gtc"
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion = "26.1.10909125"
 
@@ -41,7 +41,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.reignofplay.fmif"
+        applicationId "com.mixta.gtc"
         minSdkVersion 21
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
