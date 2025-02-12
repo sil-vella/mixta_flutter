@@ -1,20 +1,27 @@
-import 'package:guess_the_celebrity/core/managers/navigation_manager.dart';
-import 'package:guess_the_celebrity/plugins/main_plugin/modules/animations_module/animations_module.dart';
-import 'package:guess_the_celebrity/plugins/main_plugin/modules/login_module/login_module.dart';
-import 'package:guess_the_celebrity/plugins/main_plugin/modules/main_helper_module/main_helper_module.dart';
-import 'package:guess_the_celebrity/plugins/main_plugin/screens/home_screen.dart';
-import 'package:guess_the_celebrity/plugins/main_plugin/screens/preferences_screen/preferences_screen.dart';
+import 'package:mixta_guess_who/core/managers/navigation_manager.dart';
+import 'package:mixta_guess_who/plugins/main_plugin/modules/animations_module/animations_module.dart';
+import 'package:mixta_guess_who/plugins/main_plugin/modules/login_module/login_module.dart';
+import 'package:mixta_guess_who/plugins/main_plugin/modules/main_helper_module/main_helper_module.dart';
+import 'package:mixta_guess_who/plugins/main_plugin/screens/home_screen.dart';
+import 'package:mixta_guess_who/plugins/main_plugin/screens/preferences_screen/preferences_screen.dart';
 import 'package:flutter/material.dart';
 import '../../core/00_base/plugin_base.dart';
 import '../../core/managers/module_manager.dart';
 import '../../core/managers/hooks_manager.dart';
+import '../../core/managers/services_manager.dart';
+import '../../core/managers/state_manager.dart';
 import '../../tools/logging/logger.dart';
 import '../../utils/consts/config.dart';
 import 'modules/connections_module/connections_module.dart';
 
 class MainPlugin extends PluginBase {
-  MainPlugin(HooksManager hooksManager, ModuleManager moduleManager, NavigationContainer navigationContainer)
-      : super(hooksManager, moduleManager) {
+  final ServicesManager servicesManager;
+  final StateManager stateManager; // ✅ Add StateManager
+
+  MainPlugin(HooksManager hooksManager, ModuleManager moduleManager, NavigationContainer navigationContainer,
+  this.stateManager) // ✅ Pass StateManager
+      : servicesManager = ServicesManager(),
+  super(hooksManager, moduleManager) {
     moduleMap.addAll({
       'connection_module': () => ConnectionsModule(Config.apiUrl),
       'animations_module': () => AnimationsModule(),
@@ -51,10 +58,12 @@ class MainPlugin extends PluginBase {
     Logger().info('MainPlugin instance created.');
   }
 
+  /// ✅ Define initial states for this plugin
   @override
-  void initialize() {
-    super.initialize();
-    Logger().info('MainPlugin initialized.');
+  Map<String, Map<String, dynamic>> getInitialStates() {
+    return {
+
+    };
   }
 
   @override

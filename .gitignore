@@ -37,6 +37,8 @@ migrate_working_dir/
 /*.apk
 /.cxx/
 /.externalNativeBuild/
+build.py
+build.sh
 
 # Symbolication related
 app.*.symbols

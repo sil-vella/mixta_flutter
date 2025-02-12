@@ -1,63 +1,55 @@
-import 'package:guess_the_celebrity/core/managers/state_manager.dart';
-import 'package:guess_the_celebrity/plugins/adverts_plugin/adverts_plugin_main.dart';
-import 'package:guess_the_celebrity/plugins/game_plugin/game_plugin_main.dart';
-import 'package:guess_the_celebrity/plugins/game_plugin/screens/game_screen/game_screen.dart';
-import 'package:guess_the_celebrity/plugins/main_plugin/main_plugin_main.dart';
+import 'package:mixta_guess_who/core/managers/state_manager.dart';
+import 'package:mixta_guess_who/plugins/adverts_plugin/adverts_plugin_main.dart';
+import 'package:mixta_guess_who/plugins/game_plugin/game_plugin_main.dart';
+import 'package:mixta_guess_who/plugins/main_plugin/main_plugin_main.dart';
+import '../core/00_base/plugin_base.dart';
 import '../tools/logging/logger.dart';
 import '../core/managers/plugin_manager.dart';
 import '../core/managers/navigation_manager.dart';
 
 class PluginRegistry {
-  static final Map<String, dynamic> _pluginInstances = {};
+  static final Map<String, PluginBase> _pluginInstances = {};
 
-  static Map<String, dynamic> getPlugins(
+  static Map<String, PluginBase> getPlugins(
       PluginManager pluginManager,
       NavigationContainer navigationContainer,
-      ) {
+      StateManager stateManager) {
+
     if (_pluginInstances.isEmpty) {
       _pluginInstances.addAll({
-        // Register plugins here
         'main_plugin': MainPlugin(
           pluginManager.hooksManager,
           pluginManager.moduleManager,
           navigationContainer,
+          stateManager, // ✅ Pass StateManager
         ),
         'game_plugin': GamePlugin(
           pluginManager.hooksManager,
           pluginManager.moduleManager,
           navigationContainer,
+          stateManager, // ✅ Pass StateManager
         ),
         'adverts_plugin': AdvertsPlugin(
           pluginManager.hooksManager,
           pluginManager.moduleManager,
           navigationContainer,
+          stateManager, // ✅ Pass StateManager
         ),
       });
 
-      // Automatically register plugin states
-      _registerPluginStates();
+      // ✅ Auto-register all plugin states
+      _registerPluginStates(stateManager);
 
-      Logger().info('Plugins registered in PluginRegistry: ${_pluginInstances.keys}');
-    } else {
-      Logger().info('Plugins already registered. Skipping re-registration.');
+      Logger().info('✅ Plugins registered: ${_pluginInstances.keys}');
     }
 
     return _pluginInstances;
   }
 
-  /// Automatically register plugin states using StateManager
-  static void _registerPluginStates() {
-    final stateManager = StateManager(); // Access singleton instance
-
-    for (var entry in _pluginInstances.entries) {
-      final pluginKey = entry.value.runtimeType.toString(); // Use runtime type as key
-      final plugin = entry.value;
-
-      if (!stateManager.isPluginStateRegistered(pluginKey)) {
-        final initialState = (plugin as dynamic).getInitialState();
-        stateManager.registerPluginState(pluginKey, initialState);
-        Logger().info('Plugin state registered for: $pluginKey');
-      }
+  /// ✅ Register all plugin states automatically
+  static void _registerPluginStates(StateManager stateManager) {
+    for (var plugin in _pluginInstances.values) {
+      plugin.registerStates(stateManager);
     }
   }
 }

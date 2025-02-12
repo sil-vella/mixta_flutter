@@ -2,15 +2,17 @@ import '../../tools/logging/logger.dart';
 import '../00_base/plugin_base.dart';
 import 'hooks_manager.dart';
 import 'module_manager.dart';
+import 'state_manager.dart'; // ✅ Import StateManager
 
 class PluginManager {
   final HooksManager hooksManager;
   final ModuleManager moduleManager = ModuleManager();
+  final StateManager stateManager; // ✅ Pass StateManager
 
   final Map<String, dynamic> _plugins = {};
   final Map<String, dynamic> _pluginStates = {};
 
-  PluginManager(this.hooksManager);
+  PluginManager(this.hooksManager, this.stateManager); // ✅ Require StateManager
 
   /// Register and initialize a plugin
   void registerPlugin(String pluginKey, PluginBase plugin) {
@@ -21,7 +23,7 @@ class PluginManager {
 
     _plugins[pluginKey] = plugin;
     Logger().info('Initializing plugin: $pluginKey');
-    plugin.initialize();
+    plugin.initialize(stateManager); // ✅ Pass StateManager here
     Logger().info('Plugin initialized: $pluginKey');
   }
 

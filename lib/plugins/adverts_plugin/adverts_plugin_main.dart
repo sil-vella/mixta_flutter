@@ -1,24 +1,28 @@
-import 'package:guess_the_celebrity/plugins/adverts_plugin/modules/admobs/banner/banner_ad.dart';
-import 'package:guess_the_celebrity/plugins/adverts_plugin/modules/admobs/interstitial/interstitial_ad.dart';
-import 'package:guess_the_celebrity/plugins/adverts_plugin/modules/admobs/rewarded/rewarded_ad.dart';
+import 'package:mixta_guess_who/plugins/adverts_plugin/modules/admobs/banner/banner_ad.dart';
+import 'package:mixta_guess_who/plugins/adverts_plugin/modules/admobs/interstitial/interstitial_ad.dart';
+import 'package:mixta_guess_who/plugins/adverts_plugin/modules/admobs/rewarded/rewarded_ad.dart';
 import 'package:flutter/material.dart';
 import '../../core/00_base/plugin_base.dart';
 import '../../core/managers/hooks_manager.dart';
 import '../../core/managers/module_manager.dart';
 import '../../core/managers/navigation_manager.dart';
 import '../../core/managers/services_manager.dart';
+import '../../core/managers/state_manager.dart';
 import '../../tools/logging/logger.dart';
 import '../../utils/consts/config.dart';
 
 class AdvertsPlugin extends PluginBase {
   final ServicesManager servicesManager;
+  final StateManager stateManager; // ✅ Add StateManager
   final interstitialAdUnitId = Config.admobsInterstitial01;
   final rewardedAdUnitId = Config.admobsRewarded01;
 
   AdvertsPlugin(
-      HooksManager hooksManager, ModuleManager moduleManager, NavigationContainer navigationContainer)
+      HooksManager hooksManager, ModuleManager moduleManager, NavigationContainer navigationContainer,
+      this.stateManager) // ✅ Pass StateManager
       : servicesManager = ServicesManager(),
         super(hooksManager, moduleManager) {
+
     moduleMap.addAll({
       'admobs_banner_ad_module': () => BannerAdModule(),
       'admobs_interstitial_ad_module': () => InterstitialAdModule(interstitialAdUnitId),
@@ -30,6 +34,14 @@ class AdvertsPlugin extends PluginBase {
         _preLoadAds(); // ✅ Initialize ads on startup
       },
     });
+  }
+
+  /// ✅ Define initial states for this plugin
+  @override
+  Map<String, Map<String, dynamic>> getInitialStates() {
+    return {
+
+    };
   }
 
   /// ✅ Preload all ads to ensure fast loading

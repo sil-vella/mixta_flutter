@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:guess_the_celebrity/core/managers/module_manager.dart';
+import 'package:mixta_guess_who/core/managers/module_manager.dart';
 import '../../../../core/00_base/screen_base.dart';
 import '../../../../tools/logging/logger.dart';
 import '../../modules/leaderboard_module/leaderboard_module.dart';

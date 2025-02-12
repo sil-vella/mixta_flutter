@@ -1,14 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:math';
 import '../../../../core/00_base/screen_base.dart';
 import '../../../../core/managers/services_manager.dart';
+import '../../../../core/managers/state_manager.dart';
 import '../../../../tools/logging/logger.dart';
 import '../../../main_plugin/modules/main_helper_module/main_helper_module.dart';
+import '../../modules/game_play_module/config/gameplaymodule_config.dart';
 import '../../modules/game_play_module/game_play_module.dart';
 import 'components/fact_box.dart';
 import 'components/feedback_message.dart';
 import 'components/game_image_grid.dart';
+import 'components/timer_component.dart';
 
 class GameScreen extends BaseScreen {
   const GameScreen({Key? key}) : super(key: key);
@@ -33,7 +37,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   String _backgroundImage = ""; // ✅ Stores the random background
 
   final ServicesManager _servicesManager = ServicesManager();
-  final MainHelperModule _mainHelperModule = MainHelperModule();
 
   final Random _random = Random();
 
@@ -75,11 +78,12 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   /// ✅ Initializes game and updates the random background
   void _initializeGame() {
     _setRandomBackground();
+
     gamePlayModule.roundInit(() {
       setState(() {});
     });
 
-    // ✅ Set Timer - now triggers _handleAnswer when time is up
+    // ✅ Set Timer - now correctly passes context and triggers _handleAnswer when time is up
     gamePlayModule.setTimer(() {
       _handleAnswer("", timeUp: true);
     });
@@ -138,6 +142,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   }
 
   @override
+  @override
   Widget buildContent(BuildContext context) {
     return Stack(
       children: [
@@ -153,20 +158,53 @@ class GameScreenState extends BaseScreenState<GameScreen> {
 
         Column(
           children: [
-            // ✅ Top bar showing Level and Points
+            // ✅ Top bar with Level, TimerBar, and Points
             Padding(
               padding: const EdgeInsets.all(12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
                 children: [
-                  Text(
-                    "⭐ Level: $_level",
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "⭐ Level: $_level",
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "🏆 Points: $_points",
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
-                  Text(
-                    "🏆 Points: $_points",
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+
+                  Consumer<StateManager>(
+                    builder: (context, stateManager, child) {
+                      final timerState = stateManager.getPluginState<Map<String, dynamic>>("game_timer") ?? {};
+                      final isRunning = timerState["isRunning"] ?? false;
+                      final duration = (timerState["duration"] ?? 0).toDouble();
+
+                      // ✅ Ensure `_level` has a valid value before accessing `levelTimers`
+                      final int currentLevel = _level > 0 ? _level : 1;  // Default to 1 if `_level` is not set
+                      final double levelTimer = (GamePlayConfig.levelTimers[currentLevel] ?? 10).toDouble();
+
+                      // ✅ Debugging log
+                      debugPrint("🕒 Level: $currentLevel, Level Timer: $levelTimer, Remaining: $duration");
+
+                      return isRunning
+                          ? Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: TimerBar(
+                            remainingTime: duration,
+                            totalDuration: levelTimer, // ✅ Ensure correct type
+                          ),
+                        ),
+                      )
+                          : const SizedBox.shrink();
+                    },
                   ),
+
                 ],
               ),
             ),
@@ -211,4 +249,5 @@ class GameScreenState extends BaseScreenState<GameScreen> {
       ],
     );
   }
+
 }

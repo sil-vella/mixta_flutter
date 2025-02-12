@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:provider/provider.dart';
 import '../../../../core/00_base/module_base.dart';
+import '../../../../core/managers/app_manager.dart';
 import '../../../../core/managers/services_manager.dart';
+import '../../../../core/managers/state_manager.dart';
 import '../../../../tools/logging/logger.dart';
 import '../../../../utils/consts/theme_consts.dart';
 
@@ -89,14 +92,42 @@ class MainHelperModule extends ModuleBase {
     return null;
   }
 
-  /// ✅ Timer method that executes a callback after [seconds] delay
   void startTimer(int seconds, Function callback) {
+    final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+
     _logger.info("⏳ Timer started for $seconds seconds...");
 
+    // ✅ Set initial state: timer is running
+    stateManager.updatePluginState("game_timer", {
+      "isRunning": true,
+      "duration": seconds,
+    });
 
-    Timer(Duration(seconds: seconds), () {
-      _logger.info("✅ Timer completed after $seconds seconds.");
-      callback(); // Execute callback function
+    int remainingTime = seconds;
+
+    Timer.periodic(Duration(seconds: 1), (timer) {
+      remainingTime--;
+
+      // ✅ Update state every second
+      stateManager.updatePluginState("game_timer", {
+        "isRunning": true,
+        "duration": remainingTime,
+      });
+
+      if (remainingTime <= 0) {
+        timer.cancel();
+        _logger.info("✅ Timer completed after $seconds seconds.");
+
+        // ✅ Set final state: timer stopped
+        stateManager.updatePluginState("game_timer", {
+          "isRunning": false,
+          "duration": 0,
+        });
+
+        callback(); // Execute callback function
+      }
     });
   }
+
+
 }

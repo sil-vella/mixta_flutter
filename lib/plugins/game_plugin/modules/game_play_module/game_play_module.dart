@@ -1,11 +1,16 @@
 import 'dart:math';
-import 'package:guess_the_celebrity/plugins/main_plugin/modules/main_helper_module/main_helper_module.dart';
+import 'package:flutter/material.dart';
+import 'package:mixta_guess_who/plugins/main_plugin/modules/main_helper_module/main_helper_module.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/00_base/module_base.dart';
+import '../../../../core/managers/app_manager.dart';
 import '../../../../core/managers/module_manager.dart';
 import '../../../../core/managers/services_manager.dart';
+import '../../../../core/managers/state_manager.dart';
 import '../../../../tools/logging/logger.dart';
 import '../rewards_module/rewards_module.dart';
+import 'config/gameplaymodule_config.dart';
 
 class GamePlayModule extends ModuleBase {
   final Logger logger = Logger();
@@ -72,10 +77,38 @@ class GamePlayModule extends ModuleBase {
     }
 
     try {
-      final level = await sharedPref.callServiceMethod('getInt', ['level']) ?? 1;
+      // ✅ Get user's level
+      final int level = await sharedPref.callServiceMethod('getInt', ['level']) ?? 1;
 
-      _mainHelperModule.startTimer(5, () {
+      // ✅ Don't set a timer if level is 2 or less
+      if (level <= 2) {
+        logger.info("⏳ Skipping timer. Level is $level.");
+        return;
+      }
+
+      // ✅ Get the corresponding timer duration for the level (default to 10s if not set)
+      final int duration = (GamePlayConfig.levelTimers[level] ?? 10).toInt();
+
+      logger.info("⏳ Starting timer for Level $level: $duration seconds");
+
+      final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+
+      // ✅ Update the game timer state before starting
+      stateManager.updatePluginState("game_timer", {
+        "isRunning": true,
+        "duration": duration,
+      });
+
+      // ✅ Start timer with dynamic duration
+      _mainHelperModule.startTimer(duration, () {
         logger.info("⏰ Timer finished! Triggering timeout answer.");
+
+        // ✅ Update state when timer stops
+        stateManager.updatePluginState("game_timer", {
+          "isRunning": false,
+          "duration": 0,
+        });
+
         onTimeout(); // ✅ Now directly calls _handleAnswer from GameScreen
       });
 
@@ -83,6 +116,9 @@ class GamePlayModule extends ModuleBase {
       logger.error("❌ Failed to start timer: $e", error: e);
     }
   }
+
+
+
 
   void checkAnswer(String selectedImage, Function updateState, {bool timeUp = false}) async {
     if (timeUp) {
@@ -101,7 +137,7 @@ class GamePlayModule extends ModuleBase {
           logger.error("❌ RewardsModule not found.");
         }
       } else {
-        feedbackMessage = "❌ Wrong! Try Again.";
+        feedbackMessage = "❌ Incorrect.";
       }
     }
 

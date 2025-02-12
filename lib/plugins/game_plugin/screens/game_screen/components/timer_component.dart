@@ -1,64 +1,47 @@
 import 'package:flutter/material.dart';
 
-class TimerBar extends StatefulWidget {
-  final int durationInSeconds;
+class TimerBar extends StatelessWidget {
+  final double remainingTime;
+  final double totalDuration;
 
-  const TimerBar({Key? key, required this.durationInSeconds}) : super(key: key);
-
-  @override
-  _TimerBarState createState() => _TimerBarState();
-}
-
-class _TimerBarState extends State<TimerBar> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // ✅ Initialize AnimationController with specified duration
-    _controller = AnimationController(
-      vsync: this,
-      duration: Duration(seconds: widget.durationInSeconds),
-    )..forward(); // Start the animation immediately
-
-    // ✅ Create a width animation that decreases from 100% to 0%
-    _animation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.linear),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose(); // ✅ Clean up resources
-    super.dispose();
-  }
+  const TimerBar({
+    Key? key,
+    required this.remainingTime,
+    required this.totalDuration,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Container(
-          width: MediaQuery.of(context).size.width * _animation.value, // ✅ Decreasing width
-          height: 10, // ✅ Fixed height
+    double progress = (remainingTime / totalDuration).clamp(0.0, 1.0);
+    double fullWidth = MediaQuery.of(context).size.width;
+
+    return Stack(
+      children: [
+        // ✅ Transparent background with red border
+        Container(
+          width: fullWidth,
+          height: 10,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.purpleAccent, Colors.deepPurpleAccent], // ✅ Glow Effect
-            ),
+            color: Colors.transparent, // Fully transparent background
             borderRadius: BorderRadius.circular(5),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.purpleAccent.withOpacity(0.8),
-                blurRadius: 10,
-                spreadRadius: 2,
-                offset: Offset(0, 0),
-              ),
-            ],
+            border: Border.all(color: Colors.red, width: 2), // Red border
           ),
-        );
-      },
+        ),
+        // ✅ Shrinking red timer bar
+        Positioned.fill(
+          child: Align(
+            alignment: Alignment.centerRight, // Shrinks from right to left
+            child: Container(
+              width: fullWidth * progress, // Shrinks dynamically
+              height: 10,
+              decoration: BoxDecoration(
+                color: Colors.red, // Solid red timer bar
+                borderRadius: BorderRadius.circular(5),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,7 +1,7 @@
-import 'package:guess_the_celebrity/core/managers/services_manager.dart';
-import 'package:guess_the_celebrity/plugins/main_plugin/screens/home_screen.dart';
-import 'package:guess_the_celebrity/utils/consts/theme_consts.dart';
-import 'package:guess_the_celebrity/utils/consts/config.dart';
+import 'package:mixta_guess_who/core/managers/services_manager.dart';
+import 'package:mixta_guess_who/plugins/main_plugin/screens/home_screen.dart';
+import 'package:mixta_guess_who/utils/consts/theme_consts.dart';
+import 'package:mixta_guess_who/utils/consts/config.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/managers/app_manager.dart';
@@ -36,6 +36,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
+    // Assign global context when app initializes
+    AppManager.globalContext = context;
+
     return Consumer<AppManager>(
       builder: (context, appManager, child) {
         if (!appManager.isInitialized) {
@@ -60,4 +63,5 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
+
 

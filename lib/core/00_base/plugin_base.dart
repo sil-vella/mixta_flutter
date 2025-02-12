@@ -1,5 +1,7 @@
 import '../managers/module_manager.dart';
 import '../managers/hooks_manager.dart';
+import '../managers/state_manager.dart';
+import '../../tools/logging/logger.dart';
 
 abstract class PluginBase {
   final HooksManager hooksManager;
@@ -9,21 +11,21 @@ abstract class PluginBase {
   final Map<String, Function> moduleMap = {};
 
   /// Map for hooks
-  final Map<String, HookCallback> hookMap = {}; // Add hookMap
+  final Map<String, HookCallback> hookMap = {};
 
   PluginBase(this.hooksManager, this.moduleManager);
 
-
-  /// Initialize the plugin
-  void initialize() {
+  /// Initialize the plugin (registers modules, hooks, and states)
+  void initialize(StateManager stateManager) {
     registerModules();
-    registerHooks(); // Ensure hooks are registered
+    registerHooks();
+    registerStates(stateManager); // ✅ Register states
   }
 
   /// Register hooks dynamically from the hookMap
   void registerHooks() {
     hookMap.forEach((hookName, callback) {
-      hooksManager.registerHook(hookName, callback); // Register hooks
+      hooksManager.registerHook(hookName, callback);
     });
   }
 
@@ -35,16 +37,25 @@ abstract class PluginBase {
     });
   }
 
-  /// Override to provide initial state for plugin (used by PluginRegistry)
-  dynamic getInitialState() => {};
+  /// ✅ Each plugin must override this to define its states
+  Map<String, Map<String, dynamic>> getInitialStates();
 
+  /// ✅ Registers the plugin states using StateManager
+  void registerStates(StateManager stateManager) {
+    for (var entry in getInitialStates().entries) {
+      final stateKey = entry.key;
+      final stateData = entry.value;
 
-  /// Dispose the plugin
+      if (!stateManager.isPluginStateRegistered(stateKey)) {
+        stateManager.registerPluginState(stateKey, stateData);
+        Logger().info("✅ Registered plugin state: $stateKey");
+      }
+    }
+  }
+
+  /// Dispose the plugin (removes modules and hooks)
   void dispose() {
-    // Deregister modules
     moduleMap.keys.forEach(moduleManager.deregisterModule);
-    // Deregister hooks
     hookMap.keys.forEach(hooksManager.deregisterHook);
-
   }
 }

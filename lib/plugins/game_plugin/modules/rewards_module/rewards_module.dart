@@ -1,7 +1,8 @@
+import 'package:mixta_guess_who/plugins/game_plugin/modules/rewards_module/rewardsModule_config/config.dart';
+
 import '../../../../core/00_base/module_base.dart';
 import '../../../../core/managers/services_manager.dart';
 import '../../../../tools/logging/logger.dart';
-import 'config/config.dart';
 
 class RewardsModule extends ModuleBase {
   static RewardsModule? _instance;

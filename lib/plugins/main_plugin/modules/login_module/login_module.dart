@@ -1,4 +1,4 @@
-import 'package:guess_the_celebrity/core/00_base/module_base.dart';
+import 'package:mixta_guess_who/core/00_base/module_base.dart';
 import '../../../../core/managers/module_manager.dart';
 import '../../../../core/managers/services_manager.dart';
 import '../../../../tools/logging/logger.dart';

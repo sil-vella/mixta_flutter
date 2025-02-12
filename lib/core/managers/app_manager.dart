@@ -1,4 +1,4 @@
-import 'package:guess_the_celebrity/core/managers/plugin_manager.dart';
+import 'package:mixta_guess_who/core/managers/plugin_manager.dart';
 import 'package:flutter/material.dart';
 import '../../plugins/plugin_registry.dart';
 import '../services/shared_preferences.dart';
@@ -6,15 +6,19 @@ import 'hooks_manager.dart';
 import 'module_manager.dart';
 import 'navigation_manager.dart';
 import 'services_manager.dart';
+import 'state_manager.dart'; // ✅ Import StateManager
 
 class AppManager extends ChangeNotifier {
   static final AppManager _instance = AppManager._internal();
+
+  static late BuildContext globalContext;
 
   final NavigationContainer navigationContainer;
   final PluginManager pluginManager;
   final ModuleManager moduleManager;
   final HooksManager hooksManager;
   final ServicesManager servicesManager;
+  final StateManager stateManager; // ✅ Add StateManager instance
 
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
@@ -29,10 +33,11 @@ class AppManager extends ChangeNotifier {
   AppManager._internal()
       : navigationContainer = NavigationContainer(),
         hooksManager = HooksManager(),
-        pluginManager = PluginManager(HooksManager()),
+        stateManager = StateManager(), // ✅ Initialize StateManager first
+        pluginManager = PluginManager(HooksManager(), StateManager()), // ✅ Pass StateManager
         moduleManager = ModuleManager(),
         servicesManager = ServicesManager() {
-    servicesManager.autoRegisterAllServices(); // Automatically register and initialize all services
+    servicesManager.autoRegisterAllServices();
   }
 
   /// Trigger hooks dynamically
@@ -42,8 +47,7 @@ class AppManager extends ChangeNotifier {
 
   /// Initializes plugins and services
   Future<void> _initializePlugins() async {
-
-    final plugins = PluginRegistry.getPlugins(pluginManager, navigationContainer);
+    final plugins = PluginRegistry.getPlugins(pluginManager, navigationContainer, stateManager); // ✅ Pass StateManager
     for (var entry in plugins.entries) {
       pluginManager.registerPlugin(entry.key, entry.value);
     }
@@ -58,7 +62,7 @@ class AppManager extends ChangeNotifier {
   void _disposeApp() {
     moduleManager.dispose();
     pluginManager.dispose();
-    servicesManager.dispose(); // Dispose services
+    servicesManager.dispose();
     notifyListeners();
     debugPrint('App resources disposed successfully.');
   }
