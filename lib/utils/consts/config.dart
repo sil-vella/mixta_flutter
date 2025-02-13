@@ -5,7 +5,7 @@ class Config {
 
   // API URL
   static const String apiUrl = String.fromEnvironment(
-    'API_URL_LOCAL',
+    'API_URL',
     defaultValue: 'https://default.api.url',
   );
 

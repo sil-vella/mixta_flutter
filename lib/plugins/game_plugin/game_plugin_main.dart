@@ -39,7 +39,7 @@ class GamePlugin extends PluginBase {
       'reg_nav': () {
         navigationContainer.registerRoute('/game', (context) => GameScreen());
         navigationContainer.registerNavItem(DrawerItem(
-          label: 'Guess the Actor',
+          label: 'Guess Who',
           route: '/game',
           icon: Icons.quiz,
         ));

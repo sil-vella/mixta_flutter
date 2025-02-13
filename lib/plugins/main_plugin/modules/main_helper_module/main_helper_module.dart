@@ -14,6 +14,10 @@ class MainHelperModule extends ModuleBase {
   static final Random _random = Random();
   static final Logger _logger = Logger(); // Use a single logger instance
 
+  Timer? _timer; // ✅ Store active timer instance
+  int _remainingTime = 0; // ✅ Store remaining time when paused
+  bool _isPaused = false; // ✅ Track pause state
+
   MainHelperModule._internal() {
     _logger.info('MainHelperModule initialized.');
   }
@@ -92,31 +96,39 @@ class MainHelperModule extends ModuleBase {
     return null;
   }
 
+  /// ✅ Start a countdown timer with pause functionality
   void startTimer(int seconds, Function callback) {
     final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
 
     _logger.info("⏳ Timer started for $seconds seconds...");
 
+    _remainingTime = seconds; // ✅ Initialize remaining time
+    _isPaused = false;
+
     // ✅ Set initial state: timer is running
     stateManager.updatePluginState("game_timer", {
       "isRunning": true,
-      "duration": seconds,
+      "duration": _remainingTime,
     });
 
-    int remainingTime = seconds;
+    _timer?.cancel(); // Cancel any existing timer before starting a new one
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_isPaused) {
+        timer.cancel();
+        return;
+      }
 
-    Timer.periodic(Duration(seconds: 1), (timer) {
-      remainingTime--;
+      _remainingTime--;
 
       // ✅ Update state every second
       stateManager.updatePluginState("game_timer", {
         "isRunning": true,
-        "duration": remainingTime,
+        "duration": _remainingTime,
       });
 
-      if (remainingTime <= 0) {
+      if (_remainingTime <= 0) {
         timer.cancel();
-        _logger.info("✅ Timer completed after $seconds seconds.");
+        _logger.info("✅ Timer completed.");
 
         // ✅ Set final state: timer stopped
         stateManager.updatePluginState("game_timer", {
@@ -126,6 +138,83 @@ class MainHelperModule extends ModuleBase {
 
         callback(); // Execute callback function
       }
+    });
+  }
+
+  /// ✅ Pause the timer
+  void pauseTimer() {
+    if (_timer != null && !_isPaused) {
+      _isPaused = true;
+      _timer?.cancel();
+      _logger.info("⏸ Timer paused at $_remainingTime seconds.");
+
+      // ✅ Update state to reflect the pause
+      final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+      stateManager.updatePluginState("game_timer", {
+        "isRunning": false,
+        "duration": _remainingTime,
+      });
+    }
+  }
+
+  /// ✅ Resume the timer correctly
+  void resumeTimer(Function callback) {
+    if (_isPaused && _remainingTime > 0) {
+      _isPaused = false;
+      _logger.info("▶ Timer resumed with $_remainingTime seconds left.");
+
+      // ✅ Update state: Mark timer as running again
+      final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+      stateManager.updatePluginState("game_timer", {
+        "isRunning": true,
+        "duration": _remainingTime, // ✅ Ensure it continues from remaining time
+      });
+
+      // ✅ Restart the countdown
+      _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+        if (_isPaused) {
+          timer.cancel();
+          return;
+        }
+
+        _remainingTime--;
+
+        // ✅ Update UI state
+        stateManager.updatePluginState("game_timer", {
+          "isRunning": true,
+          "duration": _remainingTime,
+        });
+
+        if (_remainingTime <= 0) {
+          timer.cancel();
+          _logger.info("✅ Timer completed.");
+
+          // ✅ Mark timer as stopped
+          stateManager.updatePluginState("game_timer", {
+            "isRunning": false,
+            "duration": 0,
+          });
+
+          callback(); // ✅ Execute callback function
+        }
+      });
+    }
+  }
+
+
+  /// ✅ Stop and reset the timer
+  void stopTimer() {
+    _timer?.cancel();
+    _remainingTime = 0;
+    _isPaused = false;
+
+    _logger.info("⏹ Timer stopped.");
+
+    // ✅ Update state to reflect the stop
+    final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+    stateManager.updatePluginState("game_timer", {
+      "isRunning": false,
+      "duration": 0,
     });
   }
 

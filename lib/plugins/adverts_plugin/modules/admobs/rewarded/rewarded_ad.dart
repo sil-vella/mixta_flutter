@@ -42,21 +42,41 @@ class RewardedAdModule extends ModuleBase {
   }
 
   /// Shows the rewarded ad
-  Future<void> showAd(Map<String, dynamic> args) async {
+  Future<void> showAd(List<dynamic> args) async {
     if (_isAdReady && _rewardedAd != null) {
-      VoidCallback onUserEarnedReward = args["onUserEarnedReward"] ?? () {};
+      VoidCallback onUserEarnedReward = args.isNotEmpty && args[0] is VoidCallback
+          ? args[0] as VoidCallback
+          : () {}; // Default empty function
 
-      _rewardedAd!.show(
-        onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-          onUserEarnedReward();
+      VoidCallback onAdDismissed = args.length > 1 && args[1] is VoidCallback
+          ? args[1] as VoidCallback
+          : () {}; // Default empty function
+
+      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (Ad ad) {
+          onAdDismissed(); // ✅ Call the provided callback when the ad is closed
+          _rewardedAd?.dispose(); // ✅ Dispose when ad is closed
+          _rewardedAd = null;
+          _isAdReady = false;
+          loadAd(); // ✅ Preload the next ad
+          print('✅ Rewarded Ad dismissed and disposed.');
+        },
+        onAdFailedToShowFullScreenContent: (Ad ad, AdError error) {
+          _rewardedAd?.dispose(); // ✅ Dispose on failure
+          _rewardedAd = null;
+          _isAdReady = false;
+          loadAd();
+          print('❌ Failed to show Rewarded Ad: $error');
         },
       );
 
-      _rewardedAd = null;
-      _isAdReady = false;
-      loadAd(); // Preload next ad
+      _rewardedAd!.show(
+        onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+          onUserEarnedReward(); // ✅ Give reward to user
+        },
+      );
     } else {
-      print('Rewarded Ad not ready.');
+      print('❌ Rewarded Ad not ready.');
     }
   }
 

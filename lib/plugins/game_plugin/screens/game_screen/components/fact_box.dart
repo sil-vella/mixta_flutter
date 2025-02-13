@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
 import '../../../../../utils/consts/theme_consts.dart';
 
-class FactBox extends StatelessWidget {
+class FactBox extends StatefulWidget {
   final List<String>? facts;
 
   const FactBox({
     Key? key,
     required this.facts,
   }) : super(key: key);
+
+  @override
+  _FactBoxState createState() => _FactBoxState();
+}
+
+class _FactBoxState extends State<FactBox> {
+  final ScrollController _scrollController = ScrollController(); // ✅ Add ScrollController
+
+  @override
+  void dispose() {
+    _scrollController.dispose(); // ✅ Dispose ScrollController
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,16 +33,41 @@ class FactBox extends StatelessWidget {
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.4, // ✅ Limits height to 40% of screen
+          maxHeight: MediaQuery.of(context).size.height * 0.4, // ✅ Limit height to 40% of screen
         ),
-        child: SingleChildScrollView(
+        child: widget.facts != null && widget.facts!.isNotEmpty
+            ? Scrollbar( // ✅ Adds Scrollbar with controller
+          controller: _scrollController,
+          thumbVisibility: true,
+          child: ListView.builder(
+            controller: _scrollController, // ✅ Attach controller to ListView
+            shrinkWrap: true,
+            physics: const BouncingScrollPhysics(),
+            itemCount: widget.facts!.length,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: Text(
+                  "- ${widget.facts![index]}",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              );
+            },
+          ),
+        )
+            : const Center(
           child: Text(
-            facts?.join("\n- ") ?? "No facts available",
+            "No facts available",
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black, // ✅ Black Text
+              color: Colors.black,
             ),
           ),
         ),

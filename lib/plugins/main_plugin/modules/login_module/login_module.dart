@@ -64,7 +64,7 @@ class LoginModule extends ModuleBase {
   /// ✅ User Login Logic
   Future<Map<String, dynamic>> loginUser({
     required String email,
-    required String password,
+    required String password, // ✅ Store original password
   }) async {
     final connectionModule = moduleManager.getModule('connection_module');
     final sharedPrefService = servicesManager.getService('shared_pref');
@@ -75,29 +75,44 @@ class LoginModule extends ModuleBase {
     }
 
     try {
-      logger.info("⚡ Sending login request to `/login`...");
+      logger.info("⚡ Retrieving user points and level before login...");
+
+      // ✅ Get existing points & level from SharedPreferences
+      final existingPoints = await sharedPrefService.callServiceMethod('getInt', ['points']) ?? 0;
+      final existingLevel = await sharedPrefService.callServiceMethod('getInt', ['level']) ?? 1;
+
+      logger.info("🔹 Sending login request with: email=$email, level=$existingLevel, points=$existingPoints");
 
       final response = await connectionModule.callMethod('sendPostRequest', [
         "/login",
         {
           "email": email,
-          "password": password,
+          "password": password, // ✅ Send original password
         }
       ]);
 
-      if (response != null && response.containsKey('success') && response['success'] == true) {
-        if (!response.containsKey("username") || !response.containsKey("points") || !response.containsKey("level")) {
+      if (response != null && response.containsKey('message') && response['message'] == "Login successful") {
+        if (!response.containsKey("user") || !response["user"].containsKey("id")) {
           return {"error": "Invalid server response."};
         }
 
-        // ✅ Save user details to SharedPreferences
+        final user = response["user"]; // Extract user object
+
+        // ✅ Store updated user details in SharedPreferences
         await sharedPrefService.callServiceMethod('setString', ['email', email]);
-        await sharedPrefService.callServiceMethod('setString', ['username', response["username"]]);
-        await sharedPrefService.callServiceMethod('setInt', ['points', response["points"]]);
-        await sharedPrefService.callServiceMethod('setInt', ['level', response["level"]]);
+        await sharedPrefService.callServiceMethod('setString', ['username', user["username"]]);
+        await sharedPrefService.callServiceMethod('setString', ['password', password]); // ✅ Save original password
+        await sharedPrefService.callServiceMethod('setInt', ['user_id', user["id"]]);  // ✅ Save user ID
         await sharedPrefService.callServiceMethod('setBool', ['is_logged_in', true]);
 
-        logger.info("✅ User login successful.");
+        // ✅ Always update SharedPreferences with backend values (even if higher locally)
+        final backendPoints = user.containsKey("points") ? user["points"] : 0;
+        final backendLevel = user.containsKey("level") ? user["level"] : 1;
+
+        await sharedPrefService.callServiceMethod('setInt', ['points', backendPoints]); // ✅ Always update points
+        await sharedPrefService.callServiceMethod('setInt', ['level', backendLevel]);   // ✅ Always update level
+
+        logger.info("✅ User login successful. User ID: ${user["id"]}");
         return {"success": "Login Successful!"};
       } else {
         return {"error": response?["error"] ?? "Invalid email or password."};
