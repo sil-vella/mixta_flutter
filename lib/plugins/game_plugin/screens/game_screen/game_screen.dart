@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
@@ -41,6 +42,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   final ServicesManager _servicesManager = ServicesManager();
   final Random _random = Random();
   Set<String> fadedImages = {}; // ✅ Tracks faded images
+  CachedNetworkImageProvider? _cachedSelectedImage;
 
   @override
   void initState() {
@@ -205,21 +207,23 @@ class GameScreenState extends BaseScreenState<GameScreen> {
       _selectedImageUrl = selectedImage;
     });
 
+    /// ✅ Fetch Cached Image
+    CachedNetworkImageProvider cachedImageProvider = CachedNetworkImageProvider(selectedImage);
+
     gamePlayModule.checkAnswer(selectedImage, () {
       setState(() {
-        _correctAnswer = selectedImage; // ✅ Store the correct image when the user picks correctly
+        _correctAnswer = selectedImage;
       });
 
       _updateFeedbackState(
         showFeedback: true,
         feedbackText: gamePlayModule.feedbackMessage,
+        cachedImage: cachedImageProvider, // ✅ Pass Cached Image
       );
 
-      _loadLevelAndPoints(); // ✅ Refresh level and points after update
+      _loadLevelAndPoints();
     }, timeUp: timeUp);
-
   }
-
 
   /// ✅ Select a new random background
   void _setRandomBackground() {
@@ -229,14 +233,13 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     Logger().info("🎨 New Background: $_backgroundImage");
   }
 
-  /// ✅ Reusable function to update feedback state
-  void _updateFeedbackState({required bool showFeedback, String feedbackText = ""}) {
+  void _updateFeedbackState({required bool showFeedback, String feedbackText = "", CachedNetworkImageProvider? cachedImage}) {
     setState(() {
       _showFeedback = showFeedback;
       _feedbackText = feedbackText;
+      _cachedSelectedImage = cachedImage; // ✅ Store Cached Image
     });
 
-    // ✅ Hide feedback after 2 seconds if needed
     if (showFeedback) {
       _feedbackTimer?.cancel();
       _feedbackTimer = Timer(const Duration(seconds: 2), () {
@@ -351,9 +354,10 @@ class GameScreenState extends BaseScreenState<GameScreen> {
             child: FeedbackMessage(
               feedback: _feedbackText,
               onClose: _closeFeedback,
-              selectedImageUrl: _selectedImageUrl,
+              cachedImage: _cachedSelectedImage, // ✅ Pass Cached Image
             ),
           ),
+
 
         // ✅ Use Consumer to track state changes in real-time
         Consumer<StateManager>(

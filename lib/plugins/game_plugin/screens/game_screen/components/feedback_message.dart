@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import '../../../../../core/managers/module_manager.dart';
@@ -7,12 +8,16 @@ class FeedbackMessage extends StatefulWidget {
   final String feedback;
   final VoidCallback onClose;
   final String? selectedImageUrl;
+  final CachedNetworkImageProvider? cachedImage; // ✅ Add Cached Image Provider
+
 
   const FeedbackMessage({
     Key? key,
     required this.feedback,
     required this.onClose,
     this.selectedImageUrl,
+    this.cachedImage,
+
   }) : super(key: key);
 
   @override
@@ -53,19 +58,14 @@ class _FeedbackMessageState extends State<FeedbackMessage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // ✅ Display Selected Image ONLY IF Answer is Correct
-              if (isCorrect && widget.selectedImageUrl != null)
+              if (isCorrect && widget.cachedImage != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: Image.network(
-                    widget.selectedImageUrl!,
+                  child: Image(
+                    image: widget.cachedImage!,
                     height: 120,
                     width: 120,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.broken_image,
-                      size: 100,
-                      color: Colors.grey,
-                    ),
                   ),
                 ),
 
