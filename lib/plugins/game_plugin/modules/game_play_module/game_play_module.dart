@@ -23,31 +23,31 @@ class GamePlayModule extends ModuleBase {
   String feedbackMessage = "";
   List<String> imageOptions = []; // ✅ Store shuffled images
 
-  void resetState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+  Future<void> resetState() async {
+    final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
 
-      stateManager.updatePluginState("game_timer", {
-        "isRunning": false,
-        "duration": 30,
-      });
-
-      stateManager.updatePluginState("game_round", {
-        "hint": false,
-        "imagesLoaded": false,
-        "factLoaded": false,
-      });
-
-      logger.info("✅ Game state reset completed.");
+    stateManager.updatePluginState("game_timer", {
+      "isRunning": false,
+      "duration": 30,
     });
-  }
 
+    stateManager.updatePluginState("game_round", {
+      "hint": false,
+      "imagesLoaded": false,
+      "factLoaded": false,
+    });
+
+    logger.info("✅ Game state reset completed.");
+
+    // ✅ Wait a frame to ensure updates are reflected before proceeding
+    await Future.delayed(Duration(milliseconds: 50));
+  }
 
   /// Fetch user level and request a question from backend
   Future<void> roundInit(Function updateState) async {
-    resetState();
-    final sharedPref = _servicesManager.getService(
-        'shared_pref');
+    await resetState();  // ✅ Ensure state resets fully before proceeding
+
+    final sharedPref = _servicesManager.getService('shared_pref');
     final questionModule = ModuleManager().getModule('question_module');
 
     if (sharedPref == null) {
@@ -62,8 +62,7 @@ class GamePlayModule extends ModuleBase {
 
     try {
       // ✅ Get user's level using `SharedPrefManager`
-      final level = await sharedPref.callServiceMethod('getInt', ['level']) ??
-          1;
+      final level = await sharedPref.callServiceMethod('getInt', ['level']) ?? 1;
       logger.info("🏆 User level retrieved from SharedPref: $level");
 
       // ✅ Fetch question based on level
@@ -76,8 +75,7 @@ class GamePlayModule extends ModuleBase {
         isLoading = false;
 
         // ✅ Prepare the shuffled images (correct + 3 distractors)
-        imageOptions =
-        [response['image_url'], ...response['distractor_images']];
+        imageOptions = [response['image_url'], ...response['distractor_images']];
         imageOptions.shuffle(Random()); // ✅ Randomize order
 
         // ✅ Update UI State in GameScreen

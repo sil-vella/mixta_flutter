@@ -85,7 +85,7 @@ class StateManager with ChangeNotifier {
   }
 
 
-  void updatePluginState(String pluginKey, Map<String, dynamic> newState) {
+  void updatePluginState(String pluginKey, Map<String, dynamic> newState, {bool force = false}) {
     if (!_pluginStates.containsKey(pluginKey)) {
       Logger().error("❌ Cannot update state for '$pluginKey' - it is not registered.");
       return;
@@ -94,12 +94,18 @@ class StateManager with ChangeNotifier {
     final existingState = _pluginStates[pluginKey];
 
     if (existingState != null) {
-      _pluginStates[pluginKey] = existingState.merge(newState);
-      Logger().info("✅ Updated state for '$pluginKey': ${_pluginStates[pluginKey]!.state}");
-      notifyListeners();
+      final newMergedState = existingState.merge(newState);
+
+      // ✅ Force update if 'force' is true, or only update if there's a real change
+      if (force || newMergedState.state.toString() != existingState.state.toString()) {
+        _pluginStates[pluginKey] = newMergedState;
+        Logger().info("✅ Updated state for '$pluginKey': ${_pluginStates[pluginKey]!.state} (force: $force)");
+        notifyListeners();
+      } else {
+        Logger().info("🔁 No change detected for '$pluginKey', skipping notify. (force: $force)");
+      }
     }
   }
-
 
   // ------ Main App State Methods ------
 

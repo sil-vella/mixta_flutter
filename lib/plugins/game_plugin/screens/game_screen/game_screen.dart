@@ -40,7 +40,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   String _backgroundImage = "";
   final ServicesManager _servicesManager = ServicesManager();
   final Random _random = Random();
-  bool _isGridLoaded = false; // ✅ Track if images are fully loaded
   Set<String> fadedImages = {}; // ✅ Tracks faded images
 
   @override
@@ -53,12 +52,30 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   }
 
   void _onImagesLoaded() {
-    setState(() {
-      _isGridLoaded = true; // ✅ Update state when images are fully loaded
-    });
+    Logger().info("🖼️ ALL images loaded. Updating game state...");
 
-    Logger().info("✅ All images loaded!");
+    final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+    stateManager.updatePluginState("game_round", {
+      "imagesLoaded": true,
+    }, force: true);
   }
+
+
+  void _onFactsLoaded() {
+    final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+
+    stateManager.updatePluginState("game_round", {
+      "factLoaded": true,
+    }, force: true);
+  }
+
+  bool get _isOverlayVisible {
+    return context.select<StateManager, bool>((stateManager) {
+      final gameRoundState = stateManager.getPluginState<Map<String, dynamic>>("game_round") ?? {};
+      return !(gameRoundState["imagesLoaded"] == true && gameRoundState["factLoaded"] == true);
+    });
+  }
+
 
   /// ✅ Handles "Help" button click with Rewarded Ad
   void _useHelp() {
@@ -133,19 +150,51 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   }
 
   void _initializeGame() {
-    _setRandomBackground();
+    Logger().info("🔄 Initializing new game round...");
 
-    gamePlayModule.roundInit(() {
-      setState(() {
-        _correctAnswer = gamePlayModule.question?['image_url']; // ✅ Fetch correct answer
-        fadedImages.clear(); // ✅ Reset faded images each round
-        _selectedImageUrl = null; // ✅ Reset the selected image
-      });
+    // ✅ Clear game state BEFORE setting new data
+    setState(() {
+      _correctAnswer = null;
+      fadedImages.clear();
+      _selectedImageUrl = null;
+      gamePlayModule.imageOptions = []; // ✅ Ensure images reset
     });
 
-    // ✅ Set Timer - now correctly passes context and triggers _handleAnswer when time is up
-    gamePlayModule.setTimer(() {
-      _handleAnswer("", timeUp: true);
+    final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+
+    // ✅ Defer state update to the next frame to avoid "setState during build" error
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      stateManager.updatePluginState("game_round", {
+        "hint": false,
+        "imagesLoaded": false,
+        "factLoaded": false,
+      }, force: true);
+    });
+
+    // ✅ Clear the fact box content before loading new facts
+    setState(() {
+      gamePlayModule.question = null;
+    });
+
+    // ✅ Small delay to allow UI update before loading new content
+    Future.delayed(const Duration(milliseconds: 100), () async {
+      await gamePlayModule.roundInit(() {
+        setState(() {
+          _correctAnswer = gamePlayModule.question?['image_url'];
+          gamePlayModule.imageOptions = [
+            gamePlayModule.question?['image_url'],
+            ...gamePlayModule.question?['distractor_images']
+          ];
+          gamePlayModule.imageOptions.shuffle(Random());
+        });
+      });
+
+      // ✅ Start timer for the new round
+      gamePlayModule.setTimer(() {
+        _handleAnswer("", timeUp: true);
+      });
+
+      Logger().info("✅ New game round initialized!");
     });
   }
 
@@ -168,6 +217,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
 
       _loadLevelAndPoints(); // ✅ Refresh level and points after update
     }, timeUp: timeUp);
+
   }
 
 
@@ -208,7 +258,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
 
     _initializeGame(); // ✅ Reset game and change background
   }
-  
+
   @override
   Widget buildContent(BuildContext context) {
     return Stack(
@@ -266,9 +316,8 @@ class GameScreenState extends BaseScreenState<GameScreen> {
                 imageOptions: gamePlayModule.imageOptions.map((e) => e.toString()).toList(),
                 onImageTap: _handleAnswer,
                 fadedImages: fadedImages,
-                onAllImagesLoaded: _onImagesLoaded, // ✅ Call this function when all images are loaded
+                onAllImagesLoaded: _onImagesLoaded, // ✅ Call when images are loaded
               ),
-
 
               const SizedBox(height: 20),
 
@@ -286,18 +335,17 @@ class GameScreenState extends BaseScreenState<GameScreen> {
 
               const SizedBox(height: 20),
 
-              // ✅ Fact Box (Scrollable)
               FactBox(
                 facts: (gamePlayModule.question?['facts'] as List<dynamic>?)
                     ?.map((e) => e.toString())
                     .toList(),
+                onFactsLoaded: _onFactsLoaded, // ✅ Callback when facts are loaded
               ),
-
             ],
           ),
         ),
 
-        // ✅ Full-Screen Feedback Overlay (Only when _showFeedback is true)
+        // ✅ Full-Screen Feedback Overlay (Only when `_showFeedback` is true)
         if (_showFeedback)
           Positioned.fill(
             child: FeedbackMessage(
@@ -306,7 +354,40 @@ class GameScreenState extends BaseScreenState<GameScreen> {
               selectedImageUrl: _selectedImageUrl,
             ),
           ),
+
+        // ✅ Use Consumer to track state changes in real-time
+        Consumer<StateManager>(
+          builder: (context, stateManager, child) {
+            final gameRoundState = stateManager.getPluginState<Map<String, dynamic>>("game_round") ?? {};
+            final isOverlayVisible = !(gameRoundState["imagesLoaded"] == true && gameRoundState["factLoaded"] == true);
+
+            return isOverlayVisible
+                ? Positioned(
+              top: 100, // Adjust based on the height of the points bar
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                color: Colors.black.withOpacity(0.6), // ✅ Semi-transparent black overlay
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    CircularProgressIndicator(color: Colors.white),
+                    SizedBox(height: 20),
+                    Text(
+                      "Loading...",
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            )
+                : const SizedBox.shrink();
+          },
+        ),
       ],
     );
   }
+
 }

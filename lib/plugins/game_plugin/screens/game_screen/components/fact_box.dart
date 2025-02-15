@@ -3,10 +3,12 @@ import '../../../../../utils/consts/theme_consts.dart';
 
 class FactBox extends StatefulWidget {
   final List<String>? facts;
+  final VoidCallback onFactsLoaded; // ✅ Callback when facts are loaded
 
   const FactBox({
     Key? key,
     required this.facts,
+    required this.onFactsLoaded, // ✅ Passed from parent
   }) : super(key: key);
 
   @override
@@ -14,12 +16,24 @@ class FactBox extends StatefulWidget {
 }
 
 class _FactBoxState extends State<FactBox> {
-  final ScrollController _scrollController = ScrollController(); // ✅ Add ScrollController
+  final ScrollController _scrollController = ScrollController(); // ✅ Scroll controller
 
   @override
   void dispose() {
     _scrollController.dispose(); // ✅ Dispose ScrollController
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant FactBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // ✅ Trigger callback only when new facts are received
+    if (widget.facts != null && widget.facts!.isNotEmpty && oldWidget.facts != widget.facts) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onFactsLoaded();
+      });
+    }
   }
 
   @override
@@ -36,11 +50,11 @@ class _FactBoxState extends State<FactBox> {
           maxHeight: MediaQuery.of(context).size.height * 0.4, // ✅ Limit height to 40% of screen
         ),
         child: widget.facts != null && widget.facts!.isNotEmpty
-            ? Scrollbar( // ✅ Adds Scrollbar with controller
+            ? Scrollbar(
           controller: _scrollController,
           thumbVisibility: true,
           child: ListView.builder(
-            controller: _scrollController, // ✅ Attach controller to ListView
+            controller: _scrollController,
             shrinkWrap: true,
             physics: const BouncingScrollPhysics(),
             itemCount: widget.facts!.length,
