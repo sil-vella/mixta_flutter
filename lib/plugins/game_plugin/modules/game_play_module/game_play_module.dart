@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
+import 'dart:convert'; // ✅ Required for jsonEncode & jsonDecode
 import 'package:mixta_guess_who/plugins/main_plugin/modules/main_helper_module/main_helper_module.dart';
 import 'package:provider/provider.dart';
 

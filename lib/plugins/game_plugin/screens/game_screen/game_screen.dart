@@ -16,6 +16,7 @@ import '../../modules/game_play_module/game_play_module.dart';
 import 'components/fact_box.dart';
 import 'components/feedback_message.dart';
 import 'components/game_image_grid.dart';
+import 'components/screen_overlay.dart';
 import 'components/timer_component.dart';
 
 class GameScreen extends BaseScreen {
@@ -112,7 +113,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     }
   }
 
-  /// ✅ Fades out a random incorrect image (timer will resume from `onAdDismissed`)
   void _fadeOutIncorrectImage() {
     if (_correctAnswer == null) return; // ✅ Ensure we have a correct answer
 
@@ -121,12 +121,13 @@ class GameScreenState extends BaseScreenState<GameScreen> {
         .toList();
 
     if (incorrectImages.isNotEmpty) {
-      setState(() {
-        String fadedImage = incorrectImages[_random.nextInt(incorrectImages.length)]; // ✅ Select a random incorrect image
-        fadedImages.add(fadedImage); // ✅ Add it to the faded set
+      String fadedImage = incorrectImages[_random.nextInt(incorrectImages.length)]; // ✅ Select a random incorrect image
+
+      setState(() { // ✅ Ensure UI updates
+        fadedImages = Set.from(fadedImages)..add(fadedImage); // ✅ Force a new set
       });
 
-      Logger().info("🚫 An incorrect image has been faded out.");
+      Logger().info("🚫 An incorrect image has been faded out: $fadedImage");
     }
   }
 
@@ -153,6 +154,8 @@ class GameScreenState extends BaseScreenState<GameScreen> {
 
   void _initializeGame() {
     Logger().info("🔄 Initializing new game round...");
+
+    _setRandomBackground();
 
     // ✅ Clear game state BEFORE setting new data
     setState(() {
@@ -348,7 +351,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
           ),
         ),
 
-        // ✅ Full-Screen Feedback Overlay (Only when `_showFeedback` is true)
+        // ✅ Full-Screen Feedback Overlay
         if (_showFeedback)
           Positioned.fill(
             child: FeedbackMessage(
@@ -358,40 +361,11 @@ class GameScreenState extends BaseScreenState<GameScreen> {
             ),
           ),
 
-
-        // ✅ Use Consumer to track state changes in real-time
-        Consumer<StateManager>(
-          builder: (context, stateManager, child) {
-            final gameRoundState = stateManager.getPluginState<Map<String, dynamic>>("game_round") ?? {};
-            final isOverlayVisible = !(gameRoundState["imagesLoaded"] == true && gameRoundState["factLoaded"] == true);
-
-            return isOverlayVisible
-                ? Positioned(
-              top: 100, // Adjust based on the height of the points bar
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                color: Colors.black.withOpacity(0.6), // ✅ Semi-transparent black overlay
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    CircularProgressIndicator(color: Colors.white),
-                    SizedBox(height: 20),
-                    Text(
-                      "Loading...",
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
-            )
-                : const SizedBox.shrink();
-          },
-        ),
+        // ✅ Full-Screen Loading Overlay
+        const ScreenOverlay(), // ✅ New External Component
       ],
     );
   }
+
 
 }
