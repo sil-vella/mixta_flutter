@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 import '../../../../core/00_base/screen_base.dart';
+import '../../../../core/managers/app_manager.dart';
 import '../../../../core/managers/module_manager.dart';
 import '../../../../core/managers/services_manager.dart';
 import '../../../../core/managers/state_manager.dart';
@@ -39,7 +40,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   String _backgroundImage = "";
   final ServicesManager _servicesManager = ServicesManager();
   final Random _random = Random();
-
+  bool _isGridLoaded = false; // ✅ Track if images are fully loaded
   Set<String> fadedImages = {}; // ✅ Tracks faded images
 
   @override
@@ -51,13 +52,26 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     _loadLevelAndPoints();
   }
 
+  void _onImagesLoaded() {
+    setState(() {
+      _isGridLoaded = true; // ✅ Update state when images are fully loaded
+    });
+
+    Logger().info("✅ All images loaded!");
+  }
+
   /// ✅ Handles "Help" button click with Rewarded Ad
   void _useHelp() {
+    final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
     final rewardedAdModule = ModuleManager().getModule<RewardedAdModule>('admobs_rewarded_ad_module');
     final mainHelper = ModuleManager().getModule<MainHelperModule>('main_helper_module');
 
     if (rewardedAdModule != null && mainHelper != null) {
       mainHelper.pauseTimer(); // ✅ Pause timer when ad starts
+      // ✅ Update the game timer state before starting
+      stateManager.updatePluginState("game_round", {
+        "hint": true,
+      });
 
       rewardedAdModule.showAd([
             () {
@@ -72,6 +86,8 @@ class GameScreenState extends BaseScreenState<GameScreen> {
           });
         }
       ]);
+
+
     } else {
       Logger().info("❌ RewardedAdModule or MainHelperModule not found!");
     }
@@ -116,7 +132,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     Logger().info("📊 Loaded Level: $_level | Points: $_points");
   }
 
-  /// ✅ Initializes game and updates the random background
   void _initializeGame() {
     _setRandomBackground();
 
@@ -124,6 +139,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
       setState(() {
         _correctAnswer = gamePlayModule.question?['image_url']; // ✅ Fetch correct answer
         fadedImages.clear(); // ✅ Reset faded images each round
+        _selectedImageUrl = null; // ✅ Reset the selected image
       });
     });
 
@@ -132,8 +148,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
       _handleAnswer("", timeUp: true);
     });
   }
-
-
 
   String? _correctAnswer; // ✅ Stores the correct answer dynamically
 
@@ -183,16 +197,18 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     }
   }
 
-  /// ✅ Manually close feedback and reset the game + background
   void _closeFeedback() {
     _updateFeedbackState(showFeedback: false);
     _feedbackTimer?.cancel();
-    _initializeGame(); // ✅ Reset game and change background
-    setState(() {
-      _selectedImageUrl = null; // ✅ Reset the selected image
-    });
-  }
 
+    setState(() {
+      _selectedImageUrl = null; // ✅ Reset selected image
+      fadedImages.clear(); // ✅ Clear faded images
+    });
+
+    _initializeGame(); // ✅ Reset game and change background
+  }
+  
   @override
   Widget buildContent(BuildContext context) {
     return Stack(
@@ -246,12 +262,13 @@ class GameScreenState extends BaseScreenState<GameScreen> {
                 ),
               ),
 
-              // ✅ Image Grid with Fading Effect
               GameImageGrid(
                 imageOptions: gamePlayModule.imageOptions.map((e) => e.toString()).toList(),
                 onImageTap: _handleAnswer,
-                fadedImages: fadedImages, // ✅ Pass faded images to disable them
+                fadedImages: fadedImages,
+                onAllImagesLoaded: _onImagesLoaded, // ✅ Call this function when all images are loaded
               ),
+
 
               const SizedBox(height: 20),
 
@@ -275,6 +292,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
                     ?.map((e) => e.toString())
                     .toList(),
               ),
+
             ],
           ),
         ),

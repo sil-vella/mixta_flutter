@@ -13,4 +13,13 @@ class RewardsConfig {
     4: 2.0,  // Double points
     5: 2.5,  // 2.5x multiplier
   };
+
+  /// Level max points
+  static const Map<int, double> levelMaxPoints = {
+    1: 200,
+    2: 400,
+    3: 650,
+    4: 875,
+    5: 1100,
+  };
 }

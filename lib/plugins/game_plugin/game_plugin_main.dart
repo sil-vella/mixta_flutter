@@ -61,9 +61,10 @@ class GamePlugin extends PluginBase {
         "isRunning": false,
         "duration": 30, // Default duration
       },
-      "game_progress": {
-        "currentLevel": 1,
-        "score": 0,
+      "game_round": {
+        "hint": false,
+        "imagesLoaded": false,
+        "factLoaded": false,
       }
     };
   }
