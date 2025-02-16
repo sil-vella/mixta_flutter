@@ -64,6 +64,7 @@ class GamePlugin extends PluginBase {
         "duration": 30, // Default duration
       },
       "game_round": {
+        "roundNumber": 0,
         "hint": false,
         "imagesLoaded": false,
         "factLoaded": false,

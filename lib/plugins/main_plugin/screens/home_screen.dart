@@ -70,7 +70,6 @@ class HomeScreenState extends BaseScreenState<HomeScreen>
               : Container(color: Colors.black), // Fallback background
         ),
 
-        // ✅ Foreground Content
         Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -79,9 +78,10 @@ class HomeScreenState extends BaseScreenState<HomeScreen>
                 'applyBounceAnimation',
                 [],
                 {
-                  'child': Text(
-                    'Welcome to the Mixta Game!',
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  'child': Image.asset(
+                    'assets/images/icon_foreground.png', // Replace with your actual asset path
+                    width: 300, // Adjust size as needed
+                    height: 300,
                   ),
                   'controller': _controller,
                 },
@@ -94,6 +94,7 @@ class HomeScreenState extends BaseScreenState<HomeScreen>
             ],
           ),
         ),
+
       ],
     );
   }

@@ -9,6 +9,7 @@ import '../../../../core/managers/module_manager.dart';
 import '../../../../core/managers/services_manager.dart';
 import '../../../../core/managers/state_manager.dart';
 import '../../../../tools/logging/logger.dart';
+import '../../../adverts_plugin/modules/admobs/rewarded/rewarded_ad.dart';
 import '../rewards_module/rewards_module.dart';
 import 'config/gameplaymodule_config.dart';
 
@@ -47,6 +48,45 @@ class GamePlayModule extends ModuleBase {
 
   /// Fetch user level and request a question from backend
   Future<void> roundInit(Function updateState) async {
+    final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+
+    final gameRoundState = stateManager.getPluginState<Map<String, dynamic>>('game_round');
+    final int roundNumber = gameRoundState?['roundNumber'] ?? 1;
+
+    int updatedNumber = roundNumber + 1; // ✅ Corrected increment syntax
+
+    stateManager.updatePluginState("game_round", {
+      "roundNumber": updatedNumber, // ✅ Correctly updated value
+    });
+
+    // ✅ Call method every 4 increments
+    if (updatedNumber % 4 == 0) {
+      final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+      final rewardedAdModule = ModuleManager().getModule<RewardedAdModule>('admobs_rewarded_ad_module');
+      final mainHelper = ModuleManager().getModule<MainHelperModule>('main_helper_module');
+
+      if (rewardedAdModule != null && mainHelper != null) {
+        mainHelper.pauseTimer(); // ✅ Pause timer when ad starts
+
+        rewardedAdModule.showAd([
+              () {
+                Logger().info("Advert Played.");
+          },
+              () {
+            // ✅ Resume timer only after ad is fully dismissed
+            Future.delayed(const Duration(milliseconds: 500), () {
+              mainHelper.resumeTimer(() {
+                Logger().info("⏳ Timer resumed after ad was closed.");
+              });
+            });
+          }
+        ]);
+
+      } else {
+        Logger().info("❌ RewardedAdModule or MainHelperModule not found!");
+      }
+    }
+
     await resetState();  // ✅ Ensure state resets fully before proceeding
 
     final sharedPref = _servicesManager.getService('shared_pref');

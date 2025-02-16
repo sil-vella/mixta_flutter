@@ -59,22 +59,27 @@ class _GameImageGridState extends State<GameImageGrid> {
 
   void _onImageLoaded(int index, String imageUrl) {
     if (mounted && !_isLoaded[index]) {
-      setState(() {
-        _isLoaded[index] = true;
-        _loadedCount++;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return; // Ensure widget is still mounted before updating
 
-        Logger().info("📸 Image Loaded: $imageUrl [${_loadedCount}/${widget.imageOptions.length}]");
+        setState(() {
+          _isLoaded[index] = true;
+          _loadedCount++;
 
-        gameFunctionsHelper.storeImageCacheTimestamp(imageUrl);
+          Logger().info("📸 Image Loaded: $imageUrl [${_loadedCount}/${widget.imageOptions.length}]");
 
-        if (_loadedCount >= widget.imageOptions.length && !_callbackFired) {
-          _callbackFired = true;
-          Logger().info("✅ ALL images processed. Triggering callback...");
-          widget.onAllImagesLoaded();
-        }
+          gameFunctionsHelper.storeImageCacheTimestamp(imageUrl);
+
+          if (_loadedCount >= widget.imageOptions.length && !_callbackFired) {
+            _callbackFired = true;
+            Logger().info("✅ ALL images processed. Triggering callback...");
+            widget.onAllImagesLoaded();
+          }
+        });
       });
     }
   }
+
   void _handleImageTap(String imageUrl) {
     if (widget.fadedImages.contains(imageUrl)) return; // ✅ Ignore faded images
 

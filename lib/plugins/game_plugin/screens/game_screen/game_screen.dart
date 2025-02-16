@@ -128,7 +128,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     }
   }
 
-
   /// ✅ Load level and points from SharedPreferences
   Future<void> _loadLevelAndPoints() async {
     final sharedPref = _servicesManager.getService('shared_pref');
@@ -221,7 +220,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
       Logger().info("✅ New game round initialized!");
     });
   }
-
 
   String? _correctAnswer; // ✅ Stores the correct answer dynamically
 
