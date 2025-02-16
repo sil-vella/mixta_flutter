@@ -35,7 +35,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   late final GamePlayModule gamePlayModule;
   bool _showFeedback = false;
   String _feedbackText = "";
-  String? _selectedImageUrl;
   Timer? _feedbackTimer;
   int _level = 1;
   int _points = 0;
@@ -62,7 +61,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
       "imagesLoaded": true,
     }, force: true);
   }
-
 
   void _onFactsLoaded() {
     final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
@@ -185,7 +183,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     setState(() {
       _correctAnswer = null;
       fadedImages.clear();
-      _selectedImageUrl = null;
       gamePlayModule.imageOptions = []; // ✅ Ensure images reset
     });
 
@@ -229,9 +226,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   String? _correctAnswer; // ✅ Stores the correct answer dynamically
 
   void _handleAnswer(String selectedImage, {bool timeUp = false}) {
-    setState(() {
-      _selectedImageUrl = selectedImage;
-    });
 
     /// ✅ Fetch Cached Image
     CachedNetworkImageProvider cachedImageProvider = CachedNetworkImageProvider(selectedImage);
@@ -281,7 +275,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     _feedbackTimer?.cancel();
 
     setState(() {
-      _selectedImageUrl = null; // ✅ Reset selected image
       fadedImages.clear(); // ✅ Clear faded images
     });
 
