@@ -79,7 +79,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     });
   }
 
-
   /// ✅ Handles "Help" button click with Rewarded Ad
   void _useHelp() {
     final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
@@ -155,6 +154,31 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   void _initializeGame() {
     Logger().info("🔄 Initializing new game round...");
 
+    final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+    final gameRoundState = stateManager.getPluginState<Map<String, dynamic>>("game_round") ?? {};
+
+    bool levelUp = gameRoundState["levelUp"] ?? false;
+    bool endGame = gameRoundState["endGame"] ?? false;
+
+    if (levelUp || endGame) {
+      Logger().info("🚀 Redirecting to Level-Up Screen! LevelUp: $levelUp | EndGame: $endGame");
+
+      // ✅ Reset state to prevent looping
+      stateManager.updatePluginState("game_round", {
+        "levelUp": false,
+        "endGame": false,
+      }, force: true);
+
+      // ✅ Navigate to Level-Up Screen with arguments
+      Navigator.pushReplacementNamed(
+        context,
+        "/level-up",
+        arguments: {"levelUp": levelUp, "endGame": endGame},
+      );
+
+      return; // ✅ Stop further execution of game logic
+    }
+
     _setRandomBackground();
 
     // ✅ Clear game state BEFORE setting new data
@@ -164,8 +188,6 @@ class GameScreenState extends BaseScreenState<GameScreen> {
       _selectedImageUrl = null;
       gamePlayModule.imageOptions = []; // ✅ Ensure images reset
     });
-
-    final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
 
     // ✅ Defer state update to the next frame to avoid "setState during build" error
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -202,6 +224,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
       Logger().info("✅ New game round initialized!");
     });
   }
+
 
   String? _correctAnswer; // ✅ Stores the correct answer dynamically
 

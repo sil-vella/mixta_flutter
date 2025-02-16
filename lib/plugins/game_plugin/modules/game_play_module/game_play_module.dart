@@ -35,6 +35,8 @@ class GamePlayModule extends ModuleBase {
       "hint": false,
       "imagesLoaded": false,
       "factLoaded": false,
+      "levelUp": false,
+      "endGame": false,
     });
 
     logger.info("✅ Game state reset completed.");
@@ -137,44 +139,41 @@ class GamePlayModule extends ModuleBase {
   }
 
   void checkAnswer(String selectedImage, Function updateState, {bool timeUp = false}) async {
-    if (timeUp) {
-      feedbackMessage = "⏳ Time's up!";
-    } else {
-      final correctImage = question?['image_url'] ?? "";
-      if (selectedImage == correctImage) {
-        feedbackMessage = "🎉 Correct!";
+    final correctImage = question?['image_url'] ?? "";
+    final rewardsModule = ModuleManager().getModule<RewardsModule>('rewards_module');
+    final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
 
-        final rewardsModule = ModuleManager().getModule<RewardsModule>('rewards_module');
-        final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+    if (selectedImage == correctImage) {
+      feedbackMessage = "🎉 Correct!";
 
-        if (rewardsModule != null && stateManager != null) {
-          // ✅ Retrieve 'hint' state from StateManager
-          final gameRoundState = stateManager.getPluginState<Map<String, dynamic>>('game_round');
-          final bool hintUsed = gameRoundState?['hint'] ?? false;
+      if (rewardsModule != null && stateManager != null) {
+        // ✅ Retrieve 'hint' state from StateManager
+        final gameRoundState = stateManager.getPluginState<Map<String, dynamic>>('game_round');
+        final bool hintUsed = gameRoundState?['hint'] ?? false;
 
-          // ✅ Determine points based on hint usage
-          String pointsKey = hintUsed ? 'hint' : 'no_hint';
-          int points = await rewardsModule.getPoints(pointsKey);
+        // ✅ Determine points based on hint usage
+        String pointsKey = hintUsed ? 'hint' : 'no_hint';
+        int points = await rewardsModule.getPoints(pointsKey);
 
-          // ✅ Save the earned points and get both `points` and `endGame`
-          final rewardData = await rewardsModule.saveReward(points);
-          int totalPoints = rewardData["points"];
-          bool endGame = rewardData["endGame"];
+        // ✅ Save the earned points and get `points`, `endGame`, and `levelUp`
+        final rewardData = await rewardsModule.saveReward(points);
+        int totalPoints = rewardData["points"];
+        bool endGame = rewardData["endGame"];
+        bool levelUp = rewardData["levelUp"];
 
-          logger.info("🏆 User earned $points points with key '$pointsKey'! New total: $totalPoints | EndGame: $endGame");
+        logger.info("🏆 User earned $points points with key '$pointsKey'! New total: $totalPoints | EndGame: $endGame | LevelUp: $levelUp");
 
-          if (endGame) {
-            // ✅ Handle game-over logic here (e.g., show end-game screen)
-            feedbackMessage = "Game Complete. Well Done!!";
-            showGameOverScreen();  // Example function (define it where needed)
-          }
+        // ✅ Update game state with level-up or end-game status
+        stateManager.updatePluginState("game_round", {
+          if (levelUp) "levelUp": true,
+          if (endGame) "endGame": true,
+        });
 
-        } else {
-          logger.error("❌ RewardsModule or StateManager not found.");
-        }
       } else {
-        feedbackMessage = "❌ Incorrect.";
+        logger.error("❌ RewardsModule or StateManager not found.");
       }
+    } else {
+      feedbackMessage = "❌ Incorrect.";
     }
 
     updateState();
@@ -182,6 +181,7 @@ class GamePlayModule extends ModuleBase {
 
     // ✅ Round will reinitialize after user closes the feedback message
   }
+
 void showGameOverScreen() {
   logger.info("🎯 Game over! Player reached max level.");
 }

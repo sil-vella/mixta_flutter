@@ -3,6 +3,7 @@ import 'package:mixta_guess_who/plugins/game_plugin/modules/rewards_module/rewar
 import 'package:mixta_guess_who/plugins/game_plugin/screens/game_screen/game_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:mixta_guess_who/plugins/game_plugin/screens/leaderboard_screen/leaderboard_screen.dart';
+import 'package:mixta_guess_who/plugins/game_plugin/screens/level_up_screen/level_up_screen.dart';
 
 import '../../core/00_base/plugin_base.dart';
 import '../../core/managers/hooks_manager.dart';
@@ -49,6 +50,7 @@ class GamePlugin extends PluginBase {
           route: '/leaderboard',
           icon: Icons.quiz,
         ));
+        navigationContainer.registerRoute('/level-up', (context) => LevelUpScreen());
       },
     });
   }

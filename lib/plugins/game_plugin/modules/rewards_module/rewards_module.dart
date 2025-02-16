@@ -48,7 +48,7 @@ class RewardsModule extends ModuleBase {
 
     if (sharedPref == null || connectionModule == null) {
       Logger().error('❌ SharedPreferences or ConnectionModule service not available.');
-      return {"points": 0, "endGame": false};
+      return {"points": 0, "endGame": false, "levelUp": false};
     }
 
     // ✅ Retrieve current user details from SharedPreferences
@@ -58,7 +58,7 @@ class RewardsModule extends ModuleBase {
 
     if (userId == null || username == null || email == null) {
       Logger().error("❌ Missing user details in SharedPreferences. Cannot update rewards.");
-      return {"points": 0, "endGame": false};
+      return {"points": 0, "endGame": false, "levelUp": false};
     }
 
     // ✅ Retrieve current points and level from SharedPreferences
@@ -69,11 +69,13 @@ class RewardsModule extends ModuleBase {
     // ✅ Get max points for the current level
     double maxPoints = RewardsConfig.levelMaxPoints[currentLevel] ?? 1100;
     bool endGame = false;
+    bool levelUp = false;
 
     if (updatedPoints >= maxPoints) {
       // ✅ Check if the next level exists
       if (RewardsConfig.levelMaxPoints.containsKey(currentLevel + 1)) {
         currentLevel += 1; // ✅ Level up
+        levelUp = true; // ✅ Mark that a level up occurred
         Logger().info("🎯 Level Up! New Level: $currentLevel");
       } else {
         endGame = true; // ✅ Set endGame flag instead of calling endGame()
@@ -85,7 +87,7 @@ class RewardsModule extends ModuleBase {
     await sharedPref.callServiceMethod('setInt', ['points', updatedPoints]);
     await sharedPref.callServiceMethod('setInt', ['level', currentLevel]);
 
-    Logger().info("🏆 Total points updated in SharedPreferences: $updatedPoints | Level: $currentLevel | endGame: $endGame");
+    Logger().info("🏆 Total points updated in SharedPreferences: $updatedPoints | Level: $currentLevel | Level Up: $levelUp | endGame: $endGame");
 
     // ✅ Backend request in try-catch (ensures return even if error)
     try {
@@ -111,10 +113,11 @@ class RewardsModule extends ModuleBase {
       Logger().error("❌ Error while updating rewards: $e");
     }
 
-    // ✅ Return both updated points and the endGame flag
+    // ✅ Return both updated points, endGame status, and levelUp flag
     return {
       "points": updatedPoints,
-      "endGame": endGame
+      "endGame": endGame,
+      "levelUp": levelUp
     };
   }
 
