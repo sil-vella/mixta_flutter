@@ -5,6 +5,11 @@ class RewardsConfig {
     'hint': 5,
   };
 
+  static const Map<String, String> rewardSystem = {
+    // 'method': "max_points",
+    'method': "guess_all",
+  };
+
   /// Level-based multipliers
   static const Map<int, double> levelMultipliers = {
     1: 1.0,  // Base level, no multiplier

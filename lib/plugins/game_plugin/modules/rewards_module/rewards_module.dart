@@ -41,7 +41,7 @@ class RewardsModule extends ModuleBase {
     return (basePoints * multiplier).toInt();
   }
 
-  /// Save a specific amount of earned points to SharedPreferences and update the backend
+  /// ✅ Save Reward and Update Backend
   Future<Map<String, dynamic>> saveReward(int points) async {
     final sharedPref = _servicesManager.getService('shared_pref');
     final connectionModule = _moduleManager.getModule('connection_module');
@@ -51,7 +51,7 @@ class RewardsModule extends ModuleBase {
       return {"points": 0, "endGame": false, "levelUp": false};
     }
 
-    // ✅ Retrieve current user details from SharedPreferences
+    // ✅ Retrieve user details
     final userId = await sharedPref.callServiceMethod('getInt', ['user_id']);
     final username = await sharedPref.callServiceMethod('getString', ['username']);
     final email = await sharedPref.callServiceMethod('getString', ['email']);
@@ -61,37 +61,59 @@ class RewardsModule extends ModuleBase {
       return {"points": 0, "endGame": false, "levelUp": false};
     }
 
-    // ✅ Retrieve current points and level from SharedPreferences
-    int currentPoints = await sharedPref.callServiceMethod('getInt', ['points']) ?? 0;
-    int currentLevel = await sharedPref.callServiceMethod('getInt', ['level']) ?? 1;
+    // ✅ Retrieve selected category from SharedPreferences
+    final category = await sharedPref.callServiceMethod('getString', ['category']) ?? "mixed";
+    int currentLevel = await sharedPref.callServiceMethod('getInt', ['level_$category']) ?? 1;
+
+    // ✅ Fetch current points for the selected category & level
+    int currentPoints = await sharedPref.callServiceMethod('getInt', ['points_${category}_level$currentLevel']) ?? 0;
     int updatedPoints = currentPoints + points;
 
-    // ✅ Get max points for the current level
-    double maxPoints = RewardsConfig.levelMaxPoints[currentLevel] ?? 1100;
-    bool endGame = false;
-    bool levelUp = false;
+    // ✅ Fetch guessed names for this category & level
+    String guessedKey = "guessed_${category}_level$currentLevel";
+    List<String> guessedList = await sharedPref.callServiceMethod('getStringList', [guessedKey]) ?? [];
 
-    if (updatedPoints >= maxPoints) {
-      // ✅ Check if the next level exists
+    Logger().info("📜 Current Guessed Names for $category Level $currentLevel: $guessedList");
+
+    // ✅ Handle Leveling Up & EndGame conditions
+    bool levelUp = false;
+    bool endGame = false;
+    String? rewardMethod = RewardsConfig.rewardSystem['method'];
+
+    if (rewardMethod == "max_points") {
+      // ✅ Check if points exceed level threshold
+      double maxPoints = RewardsConfig.levelMaxPoints[currentLevel] ?? 1100;
+      if (updatedPoints >= maxPoints) {
+        if (RewardsConfig.levelMaxPoints.containsKey(currentLevel + 1)) {
+          currentLevel += 1;
+          levelUp = true;
+          Logger().info("🎯 Level Up! New Level: $currentLevel");
+        } else {
+          endGame = true;
+          Logger().info("🏆 Max level reached. Setting endGame = true.");
+        }
+      }
+    } else if (rewardMethod == "guess_all") {
+      // ✅ Check if all guesses have been made for this level
       if (RewardsConfig.levelMaxPoints.containsKey(currentLevel + 1)) {
-        currentLevel += 1; // ✅ Level up
-        levelUp = true; // ✅ Mark that a level up occurred
+        currentLevel += 1;
+        levelUp = true;
         Logger().info("🎯 Level Up! New Level: $currentLevel");
       } else {
-        endGame = true; // ✅ Set endGame flag instead of calling endGame()
+        endGame = true;
         Logger().info("🏆 Max level reached. Setting endGame = true.");
       }
     }
 
-    // ✅ Update SharedPreferences with new points and level
-    await sharedPref.callServiceMethod('setInt', ['points', updatedPoints]);
-    await sharedPref.callServiceMethod('setInt', ['level', currentLevel]);
+    // ✅ Update SharedPreferences with new points & level
+    await sharedPref.callServiceMethod('setInt', ['points_${category}_level$currentLevel', updatedPoints]);
+    await sharedPref.callServiceMethod('setInt', ['level_$category', currentLevel]);
 
-    Logger().info("🏆 Total points updated in SharedPreferences: $updatedPoints | Level: $currentLevel | Level Up: $levelUp | endGame: $endGame");
+    Logger().info("🏆 Updated Rewards: Points: $updatedPoints | Level: $currentLevel | Level Up: $levelUp | EndGame: $endGame");
 
-    // ✅ Backend request in try-catch (ensures return even if error)
+    // ✅ Backend request to update rewards
     try {
-      Logger().info("⚡ Sending updated rewards to backend...");
+      Logger().info("⚡ Sending updated rewards and guessed names to backend...");
 
       final response = await connectionModule.callMethod('sendPostRequest', [
         "/update-rewards",
@@ -99,8 +121,10 @@ class RewardsModule extends ModuleBase {
           "user_id": userId,
           "username": username,
           "email": email,
-          "points": updatedPoints,
+          "category": category,
           "level": currentLevel,
+          "points": updatedPoints,
+          "guessed_names": guessedList, // ✅ Send guessed names for the current level
         }
       ]);
 
@@ -113,7 +137,6 @@ class RewardsModule extends ModuleBase {
       Logger().error("❌ Error while updating rewards: $e");
     }
 
-    // ✅ Return both updated points, endGame status, and levelUp flag
     return {
       "points": updatedPoints,
       "endGame": endGame,

@@ -100,12 +100,18 @@ class StateManager with ChangeNotifier {
       if (force || newMergedState.state.toString() != existingState.state.toString()) {
         _pluginStates[pluginKey] = newMergedState;
         Logger().info("✅ Updated state for '$pluginKey': ${_pluginStates[pluginKey]!.state} (force: $force)");
-        notifyListeners();
+
+        // ✅ Defer `notifyListeners()` to the next frame
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+
       } else {
         Logger().info("🔁 No change detected for '$pluginKey', skipping notify. (force: $force)");
       }
     }
   }
+
 
   // ------ Main App State Methods ------
 

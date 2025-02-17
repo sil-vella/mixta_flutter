@@ -68,7 +68,7 @@ class _FeedbackMessageState extends State<FeedbackMessage> {
                     fit: BoxFit.cover,
                   ),
                 ),
-
+              
               // ✅ Feedback text
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),

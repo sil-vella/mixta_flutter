@@ -60,13 +60,13 @@ class _GameImageGridState extends State<GameImageGrid> {
   void _onImageLoaded(int index, String imageUrl) {
     if (mounted && !_isLoaded[index]) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return; // Ensure widget is still mounted before updating
+        if (!mounted) return;
 
         setState(() {
           _isLoaded[index] = true;
           _loadedCount++;
 
-          Logger().info("📸 Image Loaded: $imageUrl [${_loadedCount}/${widget.imageOptions.length}]");
+          Logger().info("📸 Image Loaded: $imageUrl [$_loadedCount/${widget.imageOptions.length}]");
 
           gameFunctionsHelper.storeImageCacheTimestamp(imageUrl);
 

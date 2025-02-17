@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert'; // ✅ Required for JSON encoding/decoding
 import '../../../../core/00_base/module_base.dart';
+import '../../../../core/managers/module_manager.dart';
 import '../../../../core/managers/services_manager.dart';
 import '../../../../tools/logging/logger.dart';
+import '../../../main_plugin/modules/connections_module/connections_module.dart';
 
 class FunctionHelperModule extends ModuleBase {
   static FunctionHelperModule? _instance;
@@ -10,9 +12,11 @@ class FunctionHelperModule extends ModuleBase {
   final Logger logger = Logger();
 
   FunctionHelperModule._internal() {
-    logger.info('FunctionHelperModule initialized.');
+    logger.info('🚀 FunctionHelperModule initialized.');
 
+    // ✅ Run cleanup task
     cleanupExpiredImages();
+
   }
 
   /// ✅ Factory method to ensure singleton
@@ -48,7 +52,6 @@ class FunctionHelperModule extends ModuleBase {
     await sharedPref.callServiceMethod('setString', ['cached_images', jsonEncode(imageCacheMap)]);
   }
 
-
   Future<void> cleanupExpiredImages() async {
     final sharedPref = _servicesManager.getService('shared_pref');
 
@@ -71,4 +74,5 @@ class FunctionHelperModule extends ModuleBase {
     // ✅ Save updated map back to SharedPreferences
     await sharedPref.callServiceMethod('setString', ['cached_images', jsonEncode(imageCacheMap)]);
   }
+
 }

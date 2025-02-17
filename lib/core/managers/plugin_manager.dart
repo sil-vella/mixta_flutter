@@ -47,13 +47,7 @@ class PluginManager {
     return _pluginStates[pluginKey] as T?;
   }
 
-  /// Update plugin state
-  void updatePluginState(String pluginKey, dynamic newState) {
-    if (_pluginStates.containsKey(pluginKey)) {
-      _pluginStates[pluginKey] = newState;
-      Logger().info('Plugin state updated for $pluginKey.');
-    }
-  }
+
 
   /// Clear all plugins
   void clearPlugins() {

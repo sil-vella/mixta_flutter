@@ -49,46 +49,6 @@ class GamePlayModule extends ModuleBase {
   /// Fetch user level and request a question from backend
   Future<void> roundInit(Function updateState) async {
     final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
-
-    final gameRoundState = stateManager.getPluginState<Map<String, dynamic>>('game_round');
-    final int roundNumber = gameRoundState?['roundNumber'] ?? 1;
-
-    int updatedNumber = roundNumber + 1; // ✅ Corrected increment syntax
-
-    stateManager.updatePluginState("game_round", {
-      "roundNumber": updatedNumber, // ✅ Correctly updated value
-    });
-
-    // ✅ Call method every 4 increments
-    if (updatedNumber % 4 == 0) {
-      final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
-      final rewardedAdModule = ModuleManager().getModule<RewardedAdModule>('admobs_rewarded_ad_module');
-      final mainHelper = ModuleManager().getModule<MainHelperModule>('main_helper_module');
-
-      if (rewardedAdModule != null && mainHelper != null) {
-        mainHelper.pauseTimer(); // ✅ Pause timer when ad starts
-
-        rewardedAdModule.showAd([
-              () {
-                Logger().info("Advert Played.");
-          },
-              () {
-            // ✅ Resume timer only after ad is fully dismissed
-            Future.delayed(const Duration(milliseconds: 500), () {
-              mainHelper.resumeTimer(() {
-                Logger().info("⏳ Timer resumed after ad was closed.");
-              });
-            });
-          }
-        ]);
-
-      } else {
-        Logger().info("❌ RewardedAdModule or MainHelperModule not found!");
-      }
-    }
-
-    await resetState();  // ✅ Ensure state resets fully before proceeding
-
     final sharedPref = _servicesManager.getService('shared_pref');
     final questionModule = ModuleManager().getModule('question_module');
 
@@ -102,28 +62,77 @@ class GamePlayModule extends ModuleBase {
       return;
     }
 
-    try {
-      // ✅ Get user's level using `SharedPrefManager`
-      final level = await sharedPref.callServiceMethod('getInt', ['level']) ?? 1;
-      logger.info("🏆 User level retrieved from SharedPref: $level");
+    // ✅ Retrieve game round state
+    final gameRoundState = stateManager.getPluginState<Map<String, dynamic>>('game_round');
+    final int roundNumber = gameRoundState?['roundNumber'] ?? 1;
+    int updatedNumber = roundNumber + 1; // ✅ Increment round
 
-      // ✅ Fetch question based on level
-      final response = await questionModule.callMethod('getQuestion', [level]);
+    stateManager.updatePluginState("game_round", {
+      "roundNumber": updatedNumber, // ✅ Update state
+    });
+
+    // ✅ Show an ad every 5 rounds
+    if (updatedNumber % 5 == 0) {
+      final rewardedAdModule = ModuleManager().getModule<RewardedAdModule>('admobs_rewarded_ad_module');
+      final mainHelper = ModuleManager().getModule<MainHelperModule>('main_helper_module');
+
+      if (rewardedAdModule != null && mainHelper != null) {
+        mainHelper.pauseTimer(); // ✅ Pause timer for ad
+
+        rewardedAdModule.showAd([
+              () => Logger().info("Advert Played."),
+              () {
+            Future.delayed(const Duration(milliseconds: 500), () {
+              mainHelper.resumeTimer(() {
+                Logger().info("⏳ Timer resumed after ad.");
+              });
+            });
+          }
+        ]);
+      } else {
+        Logger().info("❌ RewardedAdModule or MainHelperModule not found!");
+      }
+    }
+
+    await resetState();  // ✅ Ensure state resets before fetching new data
+
+    try {
+      // ✅ Get user's level and category from SharedPreferences
+      final category = await sharedPref.callServiceMethod('getString', ['category']) ?? "mixed";
+      final int level = await sharedPref.callServiceMethod('getInt', ['level_$category']) ?? 1;
+
+      logger.info("🏆 User category: $category | Level: $level");
+
+      final guessedKey = "guessed_${category}_level$level";
+      List<String> guessedNames = await sharedPref.callServiceMethod('getStringList', [guessedKey]) ?? [];
+
+// ✅ Log before sending request
+      logger.info("📜 Final guessed names sent to backend: $guessedNames");
+
+// ✅ Fetch question with updated guessed list
+      final response = await questionModule.callMethod('getQuestion', [level, category, guessedNames]);
 
       if (response.containsKey("error")) {
-        logger.error("❌ Error fetching question: ${response['error']}");
-      } else {
-        question = response;
-        isLoading = false;
-
-        // ✅ Prepare the shuffled images (correct + 3 distractors)
-        imageOptions = [response['image_url'], ...response['distractor_images']];
-        imageOptions.shuffle(Random()); // ✅ Randomize order
-
-        // ✅ Update UI State in GameScreen
-        updateState();
-        logger.info("✅ Question retrieved successfully: $response");
+        if (response["error"].contains("No more actors left")) {
+          logger.info("🏆 All celebrities have been guessed! Consider resetting.");
+        } else {
+          logger.error("❌ Error fetching question: ${response['error']}");
+        }
+        return;
       }
+
+      // ✅ Process the received question
+      question = response;
+      isLoading = false;
+
+      // ✅ Prepare shuffled images (correct + 3 distractors)
+      imageOptions = [response['image_url'], ...response['distractor_images']];
+      imageOptions.shuffle(Random());
+
+      // ✅ Update UI State in GameScreen
+      updateState();
+      logger.info("✅ Question retrieved successfully: $response");
+
     } catch (e) {
       logger.error("❌ Failed to fetch question: $e", error: e);
     }
@@ -179,9 +188,22 @@ class GamePlayModule extends ModuleBase {
   }
 
   void checkAnswer(String selectedImage, Function updateState, {bool timeUp = false}) async {
+    logger.info("🏆 checking...");
+
     final correctImage = question?['image_url'] ?? "";
     final rewardsModule = ModuleManager().getModule<RewardsModule>('rewards_module');
     final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
+    final sharedPref = ServicesManager().getService('shared_pref');
+
+    // ✅ Extract category & level from question
+    String category = question?["category"] ?? "mixed"; // Get category
+    int level = int.tryParse(question?["level"]?.toString() ?? "1") ?? 1;
+    String correctActor = question?["actor"] ?? "";  // ✅ Get the actor's name
+
+    // ✅ Ensure guessed name is saved under "mixed" if playing in mixed category
+    String guessedKey = category == "mixed" ? "guessed_mixed_level$level" : "guessed_${category}_level$level";
+
+    logger.info("📌 Saving guessed name: $correctActor under key: $guessedKey (Category: $category, Level: $level)");
 
     if (selectedImage == correctImage) {
       feedbackMessage = "🎉 Correct!";
@@ -209,6 +231,23 @@ class GamePlayModule extends ModuleBase {
           if (endGame) "endGame": true,
         });
 
+        if (sharedPref != null) {
+          List<String> guessedNames = await sharedPref.callServiceMethod('getStringList', [guessedKey]) ?? [];
+
+          if (!guessedNames.contains(correctActor)) {
+            guessedNames.add(correctActor);
+
+            // ✅ Force update SharedPreferences
+            await sharedPref.callServiceMethod('setStringList', [guessedKey, guessedNames]);
+
+            // ✅ Immediately fetch the updated list to confirm it saved
+            List<String> updatedList = await sharedPref.callServiceMethod('getStringList', [guessedKey]) ?? [];
+            logger.info("🎯 Updated guessed names for $category Level $level: $updatedList");
+          }
+        } else {
+          logger.error("❌ SharedPrefManager not found.");
+        }
+
       } else {
         logger.error("❌ RewardsModule or StateManager not found.");
       }
@@ -218,8 +257,6 @@ class GamePlayModule extends ModuleBase {
 
     updateState();
     logger.info("✅ User selected: $selectedImage | Correct: ${question?['image_url']}");
-
-    // ✅ Round will reinitialize after user closes the feedback message
   }
 
 void showGameOverScreen() {
