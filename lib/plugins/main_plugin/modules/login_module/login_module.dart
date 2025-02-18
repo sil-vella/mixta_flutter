@@ -19,7 +19,6 @@ class LoginModule extends ModuleBase {
   LoginModule._internal();
 
 
-  /// ✅ Register a new user and store category-based points & levels
   Future<Map<String, dynamic>> registerUser({
     required String username,
     required String email,
@@ -41,9 +40,15 @@ class LoginModule extends ModuleBase {
       categories = ['mixed']; // ✅ Ensure at least one category exists
     }
 
+    // ✅ Fetch levels dynamically for each category
+    Map<String, int> categoryLevels = {};
+    for (String category in categories) {
+      int levels = await sharedPrefService.callServiceMethod('getInt', ['max_levels_$category']) ?? 5; // ✅ Correct level count
+      categoryLevels[category] = levels;
+    }
+
     // ✅ Fetch points & levels for each category from SharedPreferences
     Map<String, dynamic> categoryProgress = {};
-
     for (String category in categories) {
       int currentLevel = await sharedPrefService.callServiceMethod('getInt', ['level_$category']) ?? 1;
       int categoryPoints = await sharedPrefService.callServiceMethod('getInt', ['points_${category}_level$currentLevel']) ?? 0;
@@ -54,23 +59,20 @@ class LoginModule extends ModuleBase {
       };
     }
 
-    // ✅ Fetch max levels per category from SharedPreferences
+    // ✅ Fetch guessed names per category and level
     Map<String, Map<String, List<String>>> guessedNames = {};
-    Map<String, dynamic> categoryData = await sharedPrefService.callServiceMethod('getMap', ['category_data']) ?? {};
-
     for (String category in categories) {
       Map<String, List<String>> levelGuessedNames = {};
 
-      int maxLevels = categoryData[category]?["levels"] ?? 5; // ✅ Dynamically get max levels
+      int maxLevels = categoryLevels[category] ?? 5; // ✅ Correctly use fetched levels
 
       for (int lvl = 1; lvl <= maxLevels; lvl++) {
         String guessedKey = "guessed_${category}_level$lvl";
         List<String> guessedList = await sharedPrefService.callServiceMethod('getStringList', [guessedKey]) ?? [];
-
-        levelGuessedNames["level_$lvl"] = guessedList; // ✅ Store empty lists too for consistency
+        levelGuessedNames["level_$lvl"] = guessedList;
       }
 
-      guessedNames[category] = levelGuessedNames; // ✅ Store all category levels
+      guessedNames[category] = levelGuessedNames;
     }
 
     try {
@@ -122,6 +124,9 @@ class LoginModule extends ModuleBase {
           "password": password,
         }
       ]);
+
+      // ✅ Log the full server response for debugging
+      logger.info("📡 Server Response: $response");
 
       if (response != null && response.containsKey('message') && response['message'] == "Login successful") {
         if (!response.containsKey("user") || !response["user"].containsKey("id")) {
@@ -187,6 +192,7 @@ class LoginModule extends ModuleBase {
       return {"error": "Server error. Check network connection."};
     }
   }
+
 
 
 }
