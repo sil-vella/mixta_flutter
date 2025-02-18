@@ -188,69 +188,51 @@ class GamePlayModule extends ModuleBase {
   }
 
   void checkAnswer(String selectedImage, Function updateState, {bool timeUp = false}) async {
-    logger.info("🏆 checking...");
+    logger.info("🏆 Checking answer...");
 
     final correctImage = question?['image_url'] ?? "";
     final rewardsModule = ModuleManager().getModule<RewardsModule>('rewards_module');
     final stateManager = Provider.of<StateManager>(AppManager.globalContext, listen: false);
-    final sharedPref = ServicesManager().getService('shared_pref');
 
-    // ✅ Extract category & level from question
-    String category = question?["category"] ?? "mixed"; // Get category
+    if (rewardsModule == null || stateManager == null) {
+      logger.error("❌ RewardsModule or StateManager not found.");
+      return;
+    }
+
+    // ✅ Extract category, level, and correct actor
+    String category = question?["category"] ?? "mixed";
     int level = int.tryParse(question?["level"]?.toString() ?? "1") ?? 1;
-    String correctActor = question?["actor"] ?? "";  // ✅ Get the actor's name
+    String correctActor = question?["actor"] ?? "";
 
-    // ✅ Ensure guessed name is saved under "mixed" if playing in mixed category
-    String guessedKey = category == "mixed" ? "guessed_mixed_level$level" : "guessed_${category}_level$level";
-
-    logger.info("📌 Saving guessed name: $correctActor under key: $guessedKey (Category: $category, Level: $level)");
+    logger.info("📌 Checking answer for: $correctActor (Category: $category, Level: $level)");
 
     if (selectedImage == correctImage) {
       feedbackMessage = "🎉 Correct!";
 
-      if (rewardsModule != null && stateManager != null) {
-        // ✅ Retrieve 'hint' state from StateManager
-        final gameRoundState = stateManager.getPluginState<Map<String, dynamic>>('game_round');
-        final bool hintUsed = gameRoundState?['hint'] ?? false;
+      // ✅ Retrieve 'hint' state from StateManager
+      final gameRoundState = stateManager.getPluginState<Map<String, dynamic>>('game_round');
+      final bool hintUsed = gameRoundState?['hint'] ?? false;
 
-        // ✅ Determine points based on hint usage
-        String pointsKey = hintUsed ? 'hint' : 'no_hint';
-        int points = await rewardsModule.getPoints(pointsKey);
+      // ✅ Determine points based on hint usage
+      String pointsKey = hintUsed ? 'hint' : 'no_hint';
+      int points = await rewardsModule.getPoints(pointsKey, category, level);
 
-        // ✅ Save the earned points and get `points`, `endGame`, and `levelUp`
-        final rewardData = await rewardsModule.saveReward(points);
-        int totalPoints = rewardData["points"];
-        bool endGame = rewardData["endGame"];
-        bool levelUp = rewardData["levelUp"];
+      // ✅ Call saveReward with all necessary data
+      final rewardData = await rewardsModule.saveReward(
+        points: points,
+        category: category,
+        level: level,
+        guessedActor: correctActor,
+      );
 
-        logger.info("🏆 User earned $points points with key '$pointsKey'! New total: $totalPoints | EndGame: $endGame | LevelUp: $levelUp");
+      logger.info("🏆 Updated Rewards: ${rewardData}");
 
-        // ✅ Update game state with level-up or end-game status
-        stateManager.updatePluginState("game_round", {
-          if (levelUp) "levelUp": true,
-          if (endGame) "endGame": true,
-        });
+      // ✅ Update game state with level-up or end-game status
+      stateManager.updatePluginState("game_round", {
+        if (rewardData["levelUp"]) "levelUp": true,
+        if (rewardData["endGame"]) "endGame": true,
+      });
 
-        if (sharedPref != null) {
-          List<String> guessedNames = await sharedPref.callServiceMethod('getStringList', [guessedKey]) ?? [];
-
-          if (!guessedNames.contains(correctActor)) {
-            guessedNames.add(correctActor);
-
-            // ✅ Force update SharedPreferences
-            await sharedPref.callServiceMethod('setStringList', [guessedKey, guessedNames]);
-
-            // ✅ Immediately fetch the updated list to confirm it saved
-            List<String> updatedList = await sharedPref.callServiceMethod('getStringList', [guessedKey]) ?? [];
-            logger.info("🎯 Updated guessed names for $category Level $level: $updatedList");
-          }
-        } else {
-          logger.error("❌ SharedPrefManager not found.");
-        }
-
-      } else {
-        logger.error("❌ RewardsModule or StateManager not found.");
-      }
     } else {
       feedbackMessage = "❌ Incorrect.";
     }
