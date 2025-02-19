@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mixta_guess_who/plugins/game_plugin/modules/function_helper_module/function_helper_module.dart';
 import 'package:mixta_guess_who/plugins/game_plugin/screens/progress_screen/progress_screen.dart';
 import '../../../../core/00_base/screen_base.dart';
 import '../../../../core/managers/module_manager.dart';
@@ -26,6 +27,7 @@ class PreferencesScreenState extends BaseScreenState<PreferencesScreen> {
   final Logger logger = Logger();
   final loginModule = LoginModule();
   final sharedPrefService = ServicesManager().getService('shared_pref');
+  final functionsHelperModule = FunctionHelperModule();
 
   bool _isLoggedIn = false;
   String? _username;
@@ -154,8 +156,9 @@ class PreferencesScreenState extends BaseScreenState<PreferencesScreen> {
                   itemCount: categories.length,
                   itemBuilder: (context, index) {
                     final category = categories[index];
+                    final formattedCategory = _formatCategory(category); // Format the category name
                     return ListTile(
-                      title: Text(category.toUpperCase()),
+                      title: Text(formattedCategory),
                       trailing: _selectedCategory == category
                           ? const Icon(Icons.check, color: Colors.green)
                           : null,
@@ -171,6 +174,18 @@ class PreferencesScreenState extends BaseScreenState<PreferencesScreen> {
     );
   }
 
+  /// Helper function to format category names
+  String _formatCategory(String category) {
+    // Replace underscores with spaces
+    String formatted = category.replaceAll('_', ' ');
+    // Capitalize the first letter of each word
+    formatted = formatted.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+    return formatted;
+  }
+
 
   /// ✅ Show confirmation dialog before deleting the account
   Future<void> _confirmDeleteAccount() async {
@@ -178,7 +193,7 @@ class PreferencesScreenState extends BaseScreenState<PreferencesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Delete Account"),
-        content: const Text("Are you sure you want to delete your account? This action cannot be undone."),
+        content: const Text("Are you sure you want to delete your account? This will undo all your progress"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -205,7 +220,7 @@ class PreferencesScreenState extends BaseScreenState<PreferencesScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(response["success"])),
         );
-
+        await functionsHelperModule.clearUserProgress();
         // ✅ Redirect to login screen after deletion
         await _logoutUser();
       } else {
@@ -240,13 +255,6 @@ class PreferencesScreenState extends BaseScreenState<PreferencesScreen> {
           onPressed: _showCategorySelector,
           child: Text("Select Category: $_selectedCategory"),
         ),
-        const SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: () {
-            NavigationContainer().navigateTo(context, "/progress");
-          },
-          child: const Text("View Category Progress"),
-        ),
         const SizedBox(height: 20),
         ElevatedButton(
           onPressed: _logoutUser,
@@ -267,35 +275,47 @@ class PreferencesScreenState extends BaseScreenState<PreferencesScreen> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: SingleChildScrollView(
-        child: _isLoggedIn
-            ? _buildUserInfo()
-            : _showRegisterForm
-            ? RegisterWidget(
-          onRegister: (username, email, password) async {
-            final result = await loginModule.registerUser(
-              username: username,
-              email: email,
-              password: password,
-            );
-            if (result.containsKey("success")) {
-              await _checkLoginStatus();
-              setState(() => _showRegisterForm = false);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(result["error"] ?? "Registration failed."),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          },
-          onBackToLogin: () => setState(() => _showRegisterForm = false),
-        )
-            : LoginWidget(
-          emailController: _emailController,
-          passwordController: _passwordController,
-          onLogin: _loginUser,
-          onRegisterToggle: () => setState(() => _showRegisterForm = true),
+        child: Column(
+          children: [
+            const SizedBox(height: 10), // ✅ Moved inside Column
+            ElevatedButton(
+              onPressed: () {
+                NavigationContainer().navigateTo(context, "/progress");
+              },
+              child: const Text("View Category Progress"),
+            ),
+            const SizedBox(height: 10), // Optional: Add spacing
+            _isLoggedIn
+                ? _buildUserInfo()
+                : _showRegisterForm
+                ? RegisterWidget(
+              onRegister: (username, email, password) async {
+                final result = await loginModule.registerUser(
+                  username: username,
+                  email: email,
+                  password: password,
+                );
+                if (result.containsKey("success")) {
+                  await _checkLoginStatus();
+                  setState(() => _showRegisterForm = false);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(result["error"] ?? "Registration failed."),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              onBackToLogin: () => setState(() => _showRegisterForm = false),
+            )
+                : LoginWidget(
+              emailController: _emailController,
+              passwordController: _passwordController,
+              onLogin: _loginUser,
+              onRegisterToggle: () => setState(() => _showRegisterForm = true),
+            ),
+          ],
         ),
       ),
     );

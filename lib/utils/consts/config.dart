@@ -2,7 +2,7 @@
 
 class Config {
 
-  static const bool loggerOn = false;
+  static const bool loggerOn = true;
 
   static const String appTitle = 'Flutter Base 02';
 

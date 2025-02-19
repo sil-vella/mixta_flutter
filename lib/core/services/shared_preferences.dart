@@ -13,6 +13,7 @@ class SharedPrefManager extends ServicesBase {
   factory SharedPrefManager() => _instance;
 
   @override
+  @override
   Future<void> initialize() async {
     _prefs = await SharedPreferences.getInstance();
     Logger().info('✅ SharedPreferences initialized.');
@@ -30,10 +31,12 @@ class SharedPrefManager extends ServicesBase {
     registerServiceMethod('getBool', getBool);
     registerServiceMethod('getDouble', getDouble);
     registerServiceMethod('getStringList', getStringList);
+    registerServiceMethod('get', get); // ✅ Register get method
 
-    // ✅ Register Removal Methods
+    // ✅ Register Utility Methods
     registerServiceMethod('remove', remove);
     registerServiceMethod('clear', clear);
+    registerServiceMethod('getKeys', getKeys); // ✅ Register getKeys method
 
     // ✅ Register Create Methods (Optional Pre-checks Before Setting)
     registerServiceMethod('createString', createString);
@@ -46,6 +49,15 @@ class SharedPrefManager extends ServicesBase {
     _logAllSharedPreferences();
   }
 
+  /// ✅ Get all keys stored in SharedPreferences
+  Set<String> getKeys() {
+    return _prefs?.getKeys() ?? {};
+  }
+
+  /// ✅ Generic method to get a value by key
+  dynamic get(String key) {
+    return _prefs?.get(key);
+  }
   /// ✅ Logs all stored SharedPreferences data at startup
   void _logAllSharedPreferences() {
     final allKeys = _prefs?.getKeys() ?? {};

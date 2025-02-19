@@ -87,4 +87,48 @@ class FunctionHelperModule extends ModuleBase {
     imageCacheMap.removeWhere((_, timestamp) => timestamp < twoMonthsAgo);
     await sharedPref.callServiceMethod('setString', ['cached_images', jsonEncode(imageCacheMap)]);
   }
+
+  Future<void> clearUserProgress() async {
+    final sharedPref = _servicesManager.getService('shared_pref');
+    try {
+      Logger().info("🧹 Resetting SharedPreferences values for levels, points, and guessed names...");
+
+      // ✅ Fetch all keys from SharedPreferences
+      final Set<String> allKeys = await sharedPref?.callServiceMethod('getKeys', []) ?? {};
+
+      if (allKeys.isEmpty) {
+        Logger().info("⚠️ No keys found in SharedPreferences.");
+        return;
+      }
+
+      Logger().info("✅ Retrieved all keys from SharedPreferences: $allKeys");
+
+      for (String key in allKeys) {
+        // Check if the key contains 'level', 'points', or 'guessed'
+        if (key.contains('level') || key.contains('points') || key.contains('guessed')) {
+          // Determine the type of the value and reset it
+          dynamic value = await sharedPref?.callServiceMethod('get', [key]);
+          if (value is int) {
+            // Reset integers to 0
+            await sharedPref?.callServiceMethod('setInt', [key, 0]);
+            Logger().info("✅ Reset key: $key to 0");
+          } else if (value is List<String>) {
+            // Reset lists to empty
+            await sharedPref?.callServiceMethod('setStringList', [key, []]);
+            Logger().info("✅ Reset key: $key to []");
+          } else if (value is String) {
+            // Reset strings to empty (if applicable)
+            await sharedPref?.callServiceMethod('setString', [key, '']);
+            Logger().info("✅ Reset key: $key to ''");
+          } else {
+            Logger().info("⚠️ Key $key has an unsupported type: ${value.runtimeType}");
+          }
+        }
+      }
+
+      Logger().info("✅ SharedPreferences values reset successfully.");
+    } catch (e) {
+      Logger().error("❌ Error resetting category system: $e", error: e);
+    }
+  }
 }
