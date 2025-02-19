@@ -1,6 +1,9 @@
 // lib/config/config.dart
 
 class Config {
+
+  static const bool loggerOn = false;
+
   static const String appTitle = 'Flutter Base 02';
 
   // API URL

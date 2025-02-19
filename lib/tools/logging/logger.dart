@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import '../../utils/consts/config.dart';
 
 class Logger {
   // Private constructor
@@ -12,9 +13,11 @@ class Logger {
     return _instance;
   }
 
-  /// General log method
+  /// General log method that respects `Config.loggerOn`
   void log(String message, {String name = 'AppLogger', Object? error, StackTrace? stackTrace, int level = 0}) {
-    developer.log(message, name: name, error: error, stackTrace: stackTrace, level: level);
+    if (Config.loggerOn) {
+      developer.log(message, name: name, error: error, stackTrace: stackTrace, level: level);
+    }
   }
 
   /// Log an informational message
@@ -26,4 +29,9 @@ class Logger {
   /// Log an error message
   void error(String message, {Object? error, StackTrace? stackTrace}) =>
       log(message, level: 1000, error: error, stackTrace: stackTrace);
+
+  /// Force log (logs regardless of `Config.loggerOn`)
+  void forceLog(String message, {String name = 'AppLogger', Object? error, StackTrace? stackTrace, int level = 0}) {
+    developer.log(message, name: name, error: error, stackTrace: stackTrace, level: level);
+  }
 }

@@ -205,6 +205,7 @@ class GamePlayModule extends ModuleBase {
     String correctActor = question?["actor"] ?? "";
 
     logger.info("📌 Checking answer for: $correctActor (Category: $category, Level: $level)");
+    logger.forceLog("📌 Checking answer for: $correctActor (Category: $category, Level: $level)");
 
     if (selectedImage == correctImage) {
       feedbackMessage = "🎉 Correct!";
@@ -213,9 +214,13 @@ class GamePlayModule extends ModuleBase {
       final gameRoundState = stateManager.getPluginState<Map<String, dynamic>>('game_round');
       final bool hintUsed = gameRoundState?['hint'] ?? false;
 
+      logger.forceLog("📌 hint: $hintUsed ");
+
       // ✅ Determine points based on hint usage
       String pointsKey = hintUsed ? 'hint' : 'no_hint';
       int points = await rewardsModule.getPoints(pointsKey, category, level);
+
+      logger.forceLog("📌 hint: $points ");
 
       // ✅ Call saveReward with all necessary data
       final rewardData = await rewardsModule.saveReward(

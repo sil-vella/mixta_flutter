@@ -13,16 +13,39 @@ class FunctionHelperModule extends ModuleBase {
 
   FunctionHelperModule._internal() {
     logger.info('🚀 FunctionHelperModule initialized.');
-
-    // ✅ Run cleanup task
-    cleanupExpiredImages();
-
+    cleanupExpiredImages(); // ✅ Run cleanup task
   }
 
   /// ✅ Factory method to ensure singleton
   factory FunctionHelperModule() {
     _instance ??= FunctionHelperModule._internal();
     return _instance!;
+  }
+
+  /// ✅ Fetches total points from all categories
+  Future<int> getTotalPoints() async {
+    final sharedPref = _servicesManager.getService('shared_pref');
+
+    if (sharedPref == null) {
+      logger.error('❌ SharedPreferences service not available.');
+      return 0;
+    }
+
+    List<String> categories = await sharedPref.callServiceMethod('getStringList', ['available_categories']) ?? [];
+
+    int totalPoints = 0;
+
+    for (String category in categories) {
+      int maxLevels = await sharedPref.callServiceMethod('getInt', ['max_levels_$category']) ?? 1;
+
+      for (int level = 1; level <= maxLevels; level++) {
+        int points = await sharedPref.callServiceMethod('getInt', ['points_${category}_level$level']) ?? 0;
+        totalPoints += points;
+      }
+    }
+
+    logger.info("🏆 Total Points across all categories: $totalPoints");
+    return totalPoints;
   }
 
   Future<void> storeImageCacheTimestamp(String imageUrl) async {
@@ -33,22 +56,15 @@ class FunctionHelperModule extends ModuleBase {
       return;
     }
 
-    // ✅ Retrieve existing cached image timestamps
     String? cachedImages = await sharedPref.callServiceMethod('getString', ['cached_images']);
     Map<String, int> imageCacheMap = cachedImages != null ? Map<String, int>.from(jsonDecode(cachedImages)) : {};
 
-    // ✅ Skip if image is already cached (avoid redundant updates)
     if (imageCacheMap.containsKey(imageUrl)) {
       return;
     }
 
-    // ✅ Add new image timestamp
     imageCacheMap[imageUrl] = DateTime.now().millisecondsSinceEpoch;
-
-    // ✅ Cleanup old images before saving the new entry
     await cleanupExpiredImages();
-
-    // ✅ Save updated cache back to SharedPreferences (only if changed)
     await sharedPref.callServiceMethod('setString', ['cached_images', jsonEncode(imageCacheMap)]);
   }
 
@@ -68,11 +84,7 @@ class FunctionHelperModule extends ModuleBase {
     final int now = DateTime.now().millisecondsSinceEpoch;
     final int twoMonthsAgo = now - (60 * 24 * 60 * 60 * 1000); // ✅ 60 days in milliseconds
 
-    // ✅ Remove expired images
     imageCacheMap.removeWhere((_, timestamp) => timestamp < twoMonthsAgo);
-
-    // ✅ Save updated map back to SharedPreferences
     await sharedPref.callServiceMethod('setString', ['cached_images', jsonEncode(imageCacheMap)]);
   }
-
 }

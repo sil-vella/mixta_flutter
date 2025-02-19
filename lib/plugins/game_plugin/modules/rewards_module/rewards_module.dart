@@ -57,21 +57,17 @@ class RewardsModule extends ModuleBase {
       return {"points": 0, "endGame": false, "levelUp": false};
     }
 
-    // ✅ Retrieve user details
-    final userId = await sharedPref.callServiceMethod('getInt', ['user_id']);
-    final username = await sharedPref.callServiceMethod('getString', ['username']);
-    final email = await sharedPref.callServiceMethod('getString', ['email']);
-
-    if (userId == null || username == null || email == null) {
-      Logger().error("❌ Missing user details in SharedPreferences. Cannot update rewards.");
-      return {"points": 0, "endGame": false, "levelUp": false};
-    }
+    Logger().forceLog("📌 previousPoints: $level ");
+    Logger().forceLog("📌 previousPoints: $category ");
+    Logger().forceLog("📌 previousPoints: $points ");
 
     // ✅ Retrieve current level & points
     int currentLevel = level;
     int previousPoints = await sharedPref.callServiceMethod('getInt', ['points_${category}_level$currentLevel']) ?? 0;
     int updatedPoints = previousPoints + points;
 
+    Logger().forceLog("📌 previousPoints: $previousPoints ");
+    Logger().forceLog("📌 updatedPoints: $updatedPoints ");
 
     // ✅ Fetch guessed names for this level
     String guessedKey = "guessed_${category}_level$currentLevel";
@@ -82,6 +78,13 @@ class RewardsModule extends ModuleBase {
       await sharedPref.callServiceMethod('setStringList', [guessedKey, guessedList]);
       Logger().info("📜 Updated guessed names for $category Level $currentLevel: $guessedList");
     }
+
+    // ✅ Retrieve user details
+    final userId = await sharedPref.callServiceMethod('getInt', ['user_id']);
+    final username = await sharedPref.callServiceMethod('getString', ['username']);
+    final email = await sharedPref.callServiceMethod('getString', ['email']);
+
+    Logger().forceLog("📜 current cat: $category Level $currentLevel: $guessedList");
 
     // ✅ Backend request to update rewards
     Map<String, dynamic> response = {};
@@ -102,19 +105,17 @@ class RewardsModule extends ModuleBase {
       ]);
 
       Logger().info("✅ Response from backend: $response");
+      Logger().forceLog("📜 Response from backend: $response");
 
       if (response == null || !response.containsKey("message")) {
         Logger().error("❌ Invalid response from backend.");
-        return {"points": updatedPoints, "endGame": false, "levelUp": false};
       }
 
       if (response["message"] != "Rewards updated successfully") {
         Logger().error("❌ Backend error: ${response["error"] ?? "Unknown error"}");
-        return {"points": updatedPoints, "endGame": false, "levelUp": false};
       }
     } catch (e) {
       Logger().error("❌ Error while updating rewards: $e");
-      return {"points": updatedPoints, "endGame": false, "levelUp": false};
     }
 
     // ✅ Update SharedPreferences based on backend response

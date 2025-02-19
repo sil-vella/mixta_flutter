@@ -11,6 +11,7 @@ import '../../../../core/managers/state_manager.dart';
 import '../../../../tools/logging/logger.dart';
 import '../../../adverts_plugin/modules/admobs/rewarded/rewarded_ad.dart';
 import '../../../main_plugin/modules/main_helper_module/main_helper_module.dart';
+import '../../modules/function_helper_module/function_helper_module.dart';
 import '../../modules/game_play_module/config/gameplaymodule_config.dart';
 import '../../modules/game_play_module/game_play_module.dart';
 import 'components/fact_box.dart';
@@ -128,25 +129,39 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     }
   }
 
-  /// ✅ Load level and points from SharedPreferences
+  /// ✅ Load the current category level and category-specific points from SharedPreferences
   Future<void> _loadLevelAndPoints() async {
     final sharedPref = _servicesManager.getService('shared_pref');
 
     if (sharedPref == null) {
-      Logger().error('SharedPreferences service not available.');
+      Logger().error('❌ SharedPreferences service not available.');
       return;
     }
 
-    final int level = await sharedPref.callServiceMethod('getInt', ['level']) ?? 1;
-    final int points = await sharedPref.callServiceMethod('getInt', ['points']) ?? 0;
+    // ✅ Get the currently selected category
+    final String category = await sharedPref.callServiceMethod('getString', ['category']) ?? "Mixed";
+
+    // ✅ Fetch category-specific level
+    final int level = await sharedPref.callServiceMethod('getInt', ['level_$category']) ?? 1;
+
+    // ✅ Fetch total points for the selected category
+    int categoryPoints = 0;
+    final int maxLevels = await sharedPref.callServiceMethod('getInt', ['max_levels_$category']) ?? 1;
+
+    for (int lvl = 1; lvl <= maxLevels; lvl++) {
+      int points = await sharedPref.callServiceMethod('getInt', ['points_${category}_level$lvl']) ?? 0;
+      categoryPoints += points;
+    }
 
     setState(() {
       _level = level;
-      _points = points;
+      _points = categoryPoints; // ✅ Now using points for the selected category only
     });
 
-    Logger().info("📊 Loaded Level: $_level | Points: $_points");
+    Logger().info("📊 Current Category: $category | Level: $_level | Points in Category: $_points");
   }
+
+
 
   void _initializeGame() {
     Logger().info("🔄 Initializing new game round...");
@@ -160,18 +175,18 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     if (levelUp || endGame) {
       Logger().info("🚀 Redirecting to Level-Up Screen! LevelUp: $levelUp | EndGame: $endGame");
 
-      // ✅ Reset state to prevent looping
-      stateManager.updatePluginState("game_round", {
-        "levelUp": false,
-        "endGame": false,
-      }, force: true);
-
       // ✅ Navigate to Level-Up Screen with arguments
       Navigator.pushReplacementNamed(
         context,
         "/level-up",
         arguments: {"levelUp": levelUp, "endGame": endGame},
       );
+
+      // ✅ Reset state to prevent looping
+      stateManager.updatePluginState("game_round", {
+        "levelUp": false,
+        "endGame": false,
+      }, force: true);
 
       return; // ✅ Stop further execution of game logic
     }
@@ -302,7 +317,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("⭐ Level: $_level",
+                        Text("⭐ Category Level: $_level",
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         Text("🏆 Points: $_points",
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

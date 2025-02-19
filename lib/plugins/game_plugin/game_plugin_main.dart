@@ -5,6 +5,7 @@ import 'package:mixta_guess_who/plugins/game_plugin/screens/game_screen/game_scr
 import 'package:flutter/material.dart';
 import 'package:mixta_guess_who/plugins/game_plugin/screens/leaderboard_screen/leaderboard_screen.dart';
 import 'package:mixta_guess_who/plugins/game_plugin/screens/level_up_screen/level_up_screen.dart';
+import 'package:mixta_guess_who/plugins/game_plugin/screens/progress_screen/progress_screen.dart';
 
 import '../../core/00_base/plugin_base.dart';
 import '../../core/managers/hooks_manager.dart';
@@ -52,6 +53,12 @@ class GamePlugin extends PluginBase {
         navigationContainer.registerNavItem(DrawerItem(
           label: 'Leaderboard',
           route: '/leaderboard',
+          icon: Icons.quiz,
+        ));
+        navigationContainer.registerRoute('/progress', (context) => ProgressScreen());
+        navigationContainer.registerNavItem(DrawerItem(
+          label: 'My Progress',
+          route: '/progress',
           icon: Icons.quiz,
         ));
         navigationContainer.registerRoute('/level-up', (context) => LevelUpScreen());

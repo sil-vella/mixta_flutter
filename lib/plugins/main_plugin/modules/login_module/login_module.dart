@@ -18,7 +18,6 @@ class LoginModule extends ModuleBase {
 
   LoginModule._internal();
 
-
   Future<Map<String, dynamic>> registerUser({
     required String username,
     required String email,
@@ -127,6 +126,7 @@ class LoginModule extends ModuleBase {
 
       // ✅ Log the full server response for debugging
       logger.info("📡 Server Response: $response");
+      logger.forceLog("📡 Server Response: $response");
 
       if (response != null && response.containsKey('message') && response['message'] == "Login successful") {
         if (!response.containsKey("user") || !response["user"].containsKey("id")) {
@@ -192,7 +192,52 @@ class LoginModule extends ModuleBase {
       return {"error": "Server error. Check network connection."};
     }
   }
+  /// ✅ Delete User Method
+  Future<Map<String, dynamic>> deleteUser() async {
+    final connectionModule = moduleManager.getModule('connection_module');
+    final sharedPrefService = servicesManager.getService('shared_pref');
 
+    if (connectionModule == null || sharedPrefService == null) {
+      logger.error("❌ Missing required modules.");
+      return {"error": "Service not available."};
+    }
 
+    int? userId = await sharedPrefService.callServiceMethod('getInt', ['user_id']);
+
+    if (userId == null) {
+      logger.error("❌ No user ID found. Cannot delete account.");
+      return {"error": "User not logged in or ID missing."};
+    }
+
+    try {
+      logger.info("⚡ Sending delete request for User ID: $userId...");
+
+      final response = await connectionModule.callMethod('sendPostRequest', [
+        "/delete-user",
+        {"user_id": userId},
+      ]);
+
+      logger.info("📡 Server Response: $response");
+
+      if (response == null) {
+        return {"error": "No response from server. Check network connection."};
+      }
+
+      if (response.containsKey('message')) {
+        await sharedPrefService.callServiceMethod('remove', ['user_id']);
+        await sharedPrefService.callServiceMethod('remove', ['username']);
+        await sharedPrefService.callServiceMethod('remove', ['email']);
+        await sharedPrefService.callServiceMethod('remove', ['is_logged_in']);
+
+        return {"success": "Account deleted successfully!"};
+      } else {
+        return {"error": response?["error"] ?? "Failed to delete account."};
+      }
+    } catch (e) {
+      logger.error("❌ Error deleting user: $e");
+      return {"error": "Server error. Check network connection."};
+    }
+  }
 
 }
+
