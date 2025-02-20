@@ -173,11 +173,21 @@ class GamePlugin extends PluginBase {
         }
       }
 
+      // ✅ Initialize `total_points` key if not already set
+      int existingTotalPoints = await sharedPref.callServiceMethod('getInt', ['total_points']) ?? 0;
+      if (existingTotalPoints == 0) {
+        await sharedPref.callServiceMethod('setInt', ['total_points', 0]);
+        Logger().info("✅ Initialized total_points key to 0");
+      } else {
+        Logger().info("✅ total_points key already exists: $existingTotalPoints");
+      }
+
       Logger().info("✅ SharedPreferences system initialized successfully.");
     } catch (e) {
       Logger().error("❌ Error initializing category system: $e", error: e);
     }
   }
+
 
 
   Future<void> _initializeUserData() async {

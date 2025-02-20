@@ -1,3 +1,4 @@
+import 'package:mixta_guess_who/plugins/game_plugin/modules/function_helper_module/function_helper_module.dart';
 import 'package:mixta_guess_who/plugins/game_plugin/modules/rewards_module/rewardsModule_config/config.dart';
 import 'package:provider/provider.dart';
 
@@ -51,23 +52,17 @@ class RewardsModule extends ModuleBase {
   }) async {
     final sharedPref = _servicesManager.getService('shared_pref');
     final connectionModule = _moduleManager.getModule('connection_module');
+    final functionsHelper = ModuleManager().getModule<FunctionHelperModule>('functions_helper_module');
 
-    if (sharedPref == null || connectionModule == null) {
+    if (sharedPref == null || connectionModule == null || functionsHelper == null) {
       Logger().error('❌ SharedPreferences or ConnectionModule service not available.');
       return {"points": 0, "endGame": false, "levelUp": false};
     }
-
-    Logger().forceLog("📌 previousPoints: $level ");
-    Logger().forceLog("📌 previousPoints: $category ");
-    Logger().forceLog("📌 previousPoints: $points ");
 
     // ✅ Retrieve current level & points
     int currentLevel = level;
     int previousPoints = await sharedPref.callServiceMethod('getInt', ['points_${category}_level$currentLevel']) ?? 0;
     int updatedPoints = previousPoints + points;
-
-    Logger().forceLog("📌 previousPoints: $previousPoints ");
-    Logger().forceLog("📌 updatedPoints: $updatedPoints ");
 
     // ✅ Fetch guessed names for this level
     String guessedKey = "guessed_${category}_level$currentLevel";
@@ -84,7 +79,9 @@ class RewardsModule extends ModuleBase {
     final username = await sharedPref.callServiceMethod('getString', ['username']);
     final email = await sharedPref.callServiceMethod('getString', ['email']);
 
-    Logger().forceLog("📜 current cat: $category Level $currentLevel: $guessedList");
+    int totalPoints = await functionsHelper.getTotalPoints(); // Get updated total
+    await sharedPref.callServiceMethod('setInt', ['total_points', totalPoints]); // Store the new total
+    Logger().info("🏆 Total points updated: $totalPoints");
 
     // ✅ Backend request to update rewards
     Map<String, dynamic> response = {};
@@ -101,6 +98,7 @@ class RewardsModule extends ModuleBase {
           "level": currentLevel,
           "points": updatedPoints,
           "guessed_names": guessedList,
+          "total_points": totalPoints,
         }
       ]);
 
@@ -125,6 +123,8 @@ class RewardsModule extends ModuleBase {
 
     await sharedPref.callServiceMethod('setInt', ['points_${category}_level$currentLevel', updatedPoints]);
     await sharedPref.callServiceMethod('setInt', ['level_$category', newLevel]);
+
+
 
     Logger().info("🏆 Updated Rewards: Points: $updatedPoints | Level: $newLevel | Level Up: $levelUp | EndGame: $endGame");
 

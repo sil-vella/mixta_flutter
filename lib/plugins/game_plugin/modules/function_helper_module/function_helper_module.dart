@@ -110,7 +110,7 @@ class FunctionHelperModule extends ModuleBase {
           dynamic value = await sharedPref?.callServiceMethod('get', [key]);
           if (value is int) {
             // Reset integers to 0
-            await sharedPref?.callServiceMethod('setInt', [key, 0]);
+            await sharedPref?.callServiceMethod('setInt', [key, 1]);
             Logger().info("✅ Reset key: $key to 0");
           } else if (value is List<String>) {
             // Reset lists to empty

@@ -36,6 +36,7 @@ class GameScreenState extends BaseScreenState<GameScreen> {
   late final GamePlayModule gamePlayModule;
   bool _showFeedback = false;
   String _feedbackText = "";
+  String _correctName = "";
   Timer? _feedbackTimer;
   int _level = 1;
   int _points = 0;
@@ -227,6 +228,8 @@ class GameScreenState extends BaseScreenState<GameScreen> {
         });
       });
 
+      Logger().info("🔹 after round init ${gamePlayModule.question}");
+
       // ✅ Start timer for the new round
       gamePlayModule.setTimer(() {
         _handleAnswer("", timeUp: true);
@@ -248,10 +251,13 @@ class GameScreenState extends BaseScreenState<GameScreen> {
         _correctAnswer = selectedImage;
       });
 
+      Logger().info("🔹 Correct answer $_correctAnswer");
+
       _updateFeedbackState(
         showFeedback: true,
         feedbackText: gamePlayModule.feedbackMessage,
         cachedImage: cachedImageProvider, // ✅ Pass Cached Image
+        correctName: gamePlayModule.question?['actor'],
       );
 
       _loadLevelAndPoints();
@@ -266,11 +272,12 @@ class GameScreenState extends BaseScreenState<GameScreen> {
     Logger().info("🎨 New Background: $_backgroundImage");
   }
 
-  void _updateFeedbackState({required bool showFeedback, String feedbackText = "", CachedNetworkImageProvider? cachedImage}) {
+  void _updateFeedbackState({required bool showFeedback, String feedbackText = "", CachedNetworkImageProvider? cachedImage, String correctName = ""}) {
     setState(() {
       _showFeedback = showFeedback;
       _feedbackText = feedbackText;
       _cachedSelectedImage = cachedImage; // ✅ Store Cached Image
+      _correctName = correctName;
     });
 
     if (showFeedback) {
@@ -386,7 +393,8 @@ class GameScreenState extends BaseScreenState<GameScreen> {
             child: FeedbackMessage(
               feedback: _feedbackText,
               onClose: _closeFeedback,
-              cachedImage: _cachedSelectedImage, // ✅ Pass Cached Image
+              cachedImage: _cachedSelectedImage,
+              correctName: _correctName, // ✅ Pass Cached Image
             ),
           ),
 

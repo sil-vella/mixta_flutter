@@ -49,7 +49,7 @@ class ProgressScreenState extends BaseScreenState<ProgressScreen> {
         int guessedNamesCount = 0;
 
         for (int level = 1; level <= maxLevels; level++) {
-          int points = await sharedPrefService?.callServiceMethod('getInt', ['points_${category}_level$level']) ?? 0;
+          int points = await sharedPrefService?.callServiceMethod('getInt', ['points_${category}_level$level']) ?? 1;
           List<String> guessedNames = await sharedPrefService?.callServiceMethod('getStringList', ['guessed_${category}_level$level']) ?? [];
 
           categoryPoints += points;

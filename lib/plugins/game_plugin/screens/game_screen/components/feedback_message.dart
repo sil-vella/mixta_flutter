@@ -6,6 +6,7 @@ import '../../../../../utils/consts/theme_consts.dart';
 
 class FeedbackMessage extends StatefulWidget {
   final String feedback;
+  final String correctName;
   final VoidCallback onClose;
   final String? selectedImageUrl;
   final CachedNetworkImageProvider? cachedImage; // ✅ Add Cached Image Provider
@@ -14,6 +15,7 @@ class FeedbackMessage extends StatefulWidget {
   const FeedbackMessage({
     Key? key,
     required this.feedback,
+    required this.correctName,
     required this.onClose,
     this.selectedImageUrl,
     this.cachedImage,
@@ -37,12 +39,22 @@ class _FeedbackMessageState extends State<FeedbackMessage> {
     }
   }
 
+  String _formatCorrectName(String name) {
+    return name
+        .replaceAll("_", " ") // ✅ Replace underscores with spaces
+        .split(" ") // ✅ Split into words
+        .map((word) => word.isNotEmpty ? word[0].toUpperCase() + word.substring(1).toLowerCase() : "") // ✅ Capitalize first letter of each word
+        .join(" "); // ✅ Join words back into a single string
+  }
+
+
   @override
   void dispose() {
     _confettiController.dispose();
     super.dispose();
   }
 
+  @override
   @override
   Widget build(BuildContext context) {
     bool isCorrect = widget.feedback.contains("Correct");
@@ -58,7 +70,7 @@ class _FeedbackMessageState extends State<FeedbackMessage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // ✅ Display Selected Image ONLY IF Answer is Correct
-              if (isCorrect && widget.cachedImage != null)
+              if (isCorrect && widget.cachedImage != null) ...[
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Image(
@@ -68,7 +80,20 @@ class _FeedbackMessageState extends State<FeedbackMessage> {
                     fit: BoxFit.cover,
                   ),
                 ),
-              
+                // ✅ Display Correct Name Under the Image
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    _formatCorrectName(widget.correctName),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+
               // ✅ Feedback text
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -122,4 +147,5 @@ class _FeedbackMessageState extends State<FeedbackMessage> {
       ],
     );
   }
+
 }

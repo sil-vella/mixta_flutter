@@ -30,7 +30,7 @@ class GamePlayModule extends ModuleBase {
     stateManager.updatePluginState("game_timer", {
       "isRunning": false,
       "duration": 30,
-    });
+    }, force: true);
 
     stateManager.updatePluginState("game_round", {
       "hint": false,
@@ -38,7 +38,7 @@ class GamePlayModule extends ModuleBase {
       "factLoaded": false,
       "levelUp": false,
       "endGame": false,
-    });
+    }, force: true);
 
     logger.info("✅ Game state reset completed.");
 

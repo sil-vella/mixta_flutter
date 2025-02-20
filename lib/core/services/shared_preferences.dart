@@ -152,11 +152,15 @@ class SharedPrefManager extends ServicesBase {
     Logger().info('✅ Set Double: $key = $value');
   }
 
-  /// ✅ Store list as JSON string
+  /// ✅ Store list as JSON string safely
   Future<void> setStringList(String key, List<String> value) async {
+    if (value.isEmpty) {
+      Logger().error("⚠️ Attempted to store an empty list in SharedPreferences: $key");
+    }
     await _prefs?.setString(key, jsonEncode(value));
     Logger().info('✅ Set String List: $key = $value');
   }
+
 
   // ------------------- GETTER METHODS -------------------
 
@@ -166,11 +170,23 @@ class SharedPrefManager extends ServicesBase {
   double? getDouble(String key) => _prefs?.getDouble(key);
 
   /// ✅ Retrieve list by decoding JSON string
+  /// ✅ Retrieve list by decoding JSON string safely
   List<String> getStringList(String key) {
     String? jsonString = _prefs?.getString(key);
-    if (jsonString == null) return [];
-    return List<String>.from(jsonDecode(jsonString)); // ✅ Convert JSON back to List<String>
+
+    if (jsonString == null || jsonString.isEmpty) {
+      Logger().error("⚠️ SharedPreferences contains empty data for key: $key. Returning empty list.");
+      return [];
+    }
+
+    try {
+      return List<String>.from(jsonDecode(jsonString)); // ✅ Convert JSON back to List<String>
+    } catch (e) {
+      Logger().error("❌ JSON decoding error in getStringList for key: $key | Error: $e");
+      return []; // ✅ Return an empty list instead of crashing
+    }
   }
+
 
   // ------------------- UTILITY METHODS -------------------
 
