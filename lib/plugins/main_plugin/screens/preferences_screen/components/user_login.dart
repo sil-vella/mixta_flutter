@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mixta_guess_who/utils/consts/theme_consts.dart';
 
 class LoginWidget extends StatelessWidget {
   final TextEditingController emailController;
@@ -16,45 +17,79 @@ class LoginWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text(
-          "Login",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 20),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32), // 🏆 Nice Spacing
+      decoration: BoxDecoration(
+        color: AppColors.primaryColor, // 🎨 Themed Background
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            spreadRadius: 2,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min, // 📏 Adjusts to content size
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          /// **Login Title**
+          Text(
+            "Login",
+            style: AppTextStyles.headingLarge(color: AppColors.accentColor), // 🌟 Styled Title
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
 
-        /// Email Field
-        TextFormField(
-          controller: emailController,
-          decoration: const InputDecoration(labelText: "Email"),
-          keyboardType: TextInputType.emailAddress,
-        ),
-        const SizedBox(height: 10),
+          /// **Email Field**
+          TextFormField(
+            controller: emailController,
+            style: AppTextStyles.bodyMedium, // ✏️ Styled Input Text
+            decoration: InputDecoration(
+              labelText: "Email",
+              prefixIcon: const Icon(Icons.email, color: AppColors.accentColor),
+            ),
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: 12),
 
-        /// Password Field
-        TextFormField(
-          controller: passwordController,
-          decoration: const InputDecoration(labelText: "Password"),
-          obscureText: true,
-        ),
-        const SizedBox(height: 20),
+          /// **Password Field**
+          TextFormField(
+            controller: passwordController,
+            style: AppTextStyles.bodyMedium, // ✏️ Styled Input Text
+            decoration: InputDecoration(
+              labelText: "Password",
+              prefixIcon: const Icon(Icons.lock, color: AppColors.accentColor),
+            ),
+            obscureText: true,
+          ),
+          const SizedBox(height: 20),
 
-        /// Login Button
-        ElevatedButton(
-          onPressed: onLogin,
-          child: const Text("Login"),
-        ),
+          /// **Login Button**
+          ElevatedButton(
+            onPressed: onLogin,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accentColor, // 🟡 Themed Button
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text("Login", style: AppTextStyles.buttonText),
+          ),
 
-        const SizedBox(height: 10),
+          const SizedBox(height: 12),
 
-        /// Toggle to Registration Form
-        TextButton(
-          onPressed: onRegisterToggle,
-          child: const Text("Register a new user"),
-        ),
-      ],
+          /// **Toggle to Register**
+          TextButton(
+            onPressed: onRegisterToggle,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.accentColor, // 🎨 Gold Accent
+            ),
+            child: const Text("Register new user", style: AppTextStyles.buttonText),
+          ),
+        ],
+      ),
     );
   }
 }

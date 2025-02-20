@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mixta_guess_who/utils/consts/theme_consts.dart';
 
 class RegisterWidget extends StatefulWidget {
   final Future<void> Function(String username, String email, String password) onRegister;
@@ -41,60 +42,98 @@ class _RegisterWidgetState extends State<RegisterWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            "Register",
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 20),
-
-          /// Username Field
-          TextFormField(
-            controller: _usernameController,
-            decoration: const InputDecoration(labelText: "Username"),
-            validator: (value) => value!.length < 5 ? "Username must be at least 5 characters long." : null,
-          ),
-          const SizedBox(height: 10),
-
-          /// Email Field
-          TextFormField(
-            controller: _emailController,
-            decoration: const InputDecoration(labelText: "Email"),
-            keyboardType: TextInputType.emailAddress,
-            validator: (value) =>
-            !RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").hasMatch(value!)
-                ? "Enter a valid email."
-                : null,
-          ),
-          const SizedBox(height: 10),
-
-          /// Password Field
-          TextFormField(
-            controller: _passwordController,
-            decoration: const InputDecoration(labelText: "Password"),
-            obscureText: true,
-            validator: (value) => value!.length < 8 ? "Password must be at least 8 characters long." : null,
-          ),
-          const SizedBox(height: 20),
-
-          /// Register Button
-          ElevatedButton(
-            onPressed: _isRegistering ? null : _registerUser,
-            child: _isRegistering ? const CircularProgressIndicator() : const Text("Create Account"),
-          ),
-
-          const SizedBox(height: 10),
-
-          /// Toggle to Login Form
-          TextButton(
-            onPressed: widget.onBackToLogin,
-            child: const Text("Back to Login"),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      decoration: BoxDecoration(
+        color: AppColors.primaryColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            spreadRadius: 2,
+            offset: const Offset(0, 5),
           ),
         ],
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // **Register Title**
+            Text(
+              "Register",
+              style: AppTextStyles.headingLarge(color: AppColors.accentColor),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+
+            // **Username Field**
+            TextFormField(
+              controller: _usernameController,
+              style: AppTextStyles.bodyMedium,
+              decoration: InputDecoration(
+                labelText: "Username",
+                prefixIcon: const Icon(Icons.person, color: AppColors.accentColor),
+              ),
+              validator: (value) => value!.length < 5 ? "Username must be at least 5 characters long." : null,
+            ),
+            const SizedBox(height: 12),
+
+            // **Email Field**
+            TextFormField(
+              controller: _emailController,
+              style: AppTextStyles.bodyMedium,
+              decoration: InputDecoration(
+                labelText: "Email",
+                prefixIcon: const Icon(Icons.email, color: AppColors.accentColor),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) => !RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").hasMatch(value!)
+                  ? "Enter a valid email."
+                  : null,
+            ),
+            const SizedBox(height: 12),
+
+            // **Password Field**
+            TextFormField(
+              controller: _passwordController,
+              style: AppTextStyles.bodyMedium,
+              decoration: InputDecoration(
+                labelText: "Password",
+                prefixIcon: const Icon(Icons.lock, color: AppColors.accentColor),
+              ),
+              obscureText: true,
+              validator: (value) => value!.length < 8 ? "Password must be at least 8 characters long." : null,
+            ),
+            const SizedBox(height: 20),
+
+            // **Register Button**
+            ElevatedButton(
+              onPressed: _isRegistering ? null : _registerUser,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accentColor,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: _isRegistering
+                  ? const CircularProgressIndicator()
+                  : Text("Create Account", style: AppTextStyles.buttonText),
+            ),
+            const SizedBox(height: 12),
+
+            // **Toggle to Login Form**
+            TextButton(
+              onPressed: widget.onBackToLogin,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.accentColor,
+              ),
+              child: const Text("Back to login", style: AppTextStyles.buttonText),
+            ),
+          ],
+        ),
       ),
     );
   }

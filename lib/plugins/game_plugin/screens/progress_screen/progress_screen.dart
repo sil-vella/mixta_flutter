@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/00_base/screen_base.dart';
 import '../../../../core/managers/services_manager.dart';
 import '../../../../tools/logging/logger.dart';
+import '../../../../utils/consts/theme_consts.dart';
 import '../../modules/function_helper_module/function_helper_module.dart';
 
 class ProgressScreen extends BaseScreen {
@@ -21,7 +22,7 @@ class ProgressScreenState extends BaseScreenState<ProgressScreen> {
   final sharedPrefService = ServicesManager().getService('shared_pref');
 
   Map<String, dynamic> _categories = {};
-  int _totalPoints = 0; // Track total points across categories
+  int _totalPoints = 0;
   bool _isLoading = true;
 
   @override
@@ -30,7 +31,6 @@ class ProgressScreenState extends BaseScreenState<ProgressScreen> {
     _fetchCategories();
   }
 
-  /// ✅ Fetch categories along with levels, points, and guessed names
   Future<void> _fetchCategories() async {
     if (sharedPrefService == null) return;
 
@@ -65,12 +65,11 @@ class ProgressScreenState extends BaseScreenState<ProgressScreen> {
         logger.info("📊 Category: $category -> Level: $currentLevel, Points: $categoryPoints, Guessed: $guessedNamesCount");
       }
 
-      // ✅ Use FunctionHelperModule to get the total points
       int totalPoints = await FunctionHelperModule().getTotalPoints();
 
       setState(() {
         _categories = categoryData;
-        _totalPoints = totalPoints; // ✅ Now using the helper method
+        _totalPoints = totalPoints;
         _isLoading = false;
       });
 
@@ -89,6 +88,40 @@ class ProgressScreenState extends BaseScreenState<ProgressScreen> {
     );
   }
 
+  /// ✅ UI for displaying total points
+  /// ✅ UI for displaying total points
+  Widget _buildTotalPointsCard() {
+    return Padding(
+      padding: AppPadding.defaultPadding,
+      child: Card(
+        color: AppColors.accentColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          width: double.infinity, // ✅ Full width
+          padding: AppPadding.cardPadding,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center, // ✅ Centered content
+            crossAxisAlignment: CrossAxisAlignment.center, // ✅ Center text horizontally
+            children: [
+              Text(
+                "🏆 Total Points",
+                style: AppTextStyles.headingSmall(color: AppColors.white),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "$_totalPoints",
+                style: AppTextStyles.headingLarge(color: AppColors.white),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
   /// ✅ UI for displaying category progress
   Widget _buildCategoryProgress() {
     if (_isLoading) {
@@ -96,50 +129,43 @@ class ProgressScreenState extends BaseScreenState<ProgressScreen> {
     }
 
     if (_categories.isEmpty) {
-      return const Center(child: Text("No category progress found.", style: TextStyle(fontSize: 18)));
+      return Center(
+        child: Text(
+          "No category progress found.",
+          style: AppTextStyles.bodyLarge,
+        ),
+      );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ✅ Display total points at the top
-        Card(
-          margin: const EdgeInsets.all(16),
-          color: Colors.blueAccent,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: Text(
-                "🏆 Total Points: $_totalPoints",
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+    return Expanded(
+      child: ListView.builder(
+        itemCount: _categories.length,
+        padding: AppPadding.defaultPadding,
+        itemBuilder: (context, index) {
+          final category = _categories.keys.elementAt(index);
+          final data = _categories[category];
+
+          return Card(
+            color: AppColors.primaryColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            child: ListTile(
+              contentPadding: AppPadding.cardPadding,
+              title: Text(
+                _formatCategoryName(category),
+                style: AppTextStyles.headingSmall(),
+              ),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  "🔹 Level: ${data["level"]}\n⭐ Points: ${data["points"]}\n🎯 Guessed Names: ${data["guessedNamesCount"]}",
+                  style: AppTextStyles.bodyMedium,
+                ),
               ),
             ),
-          ),
-        ),
-
-        // ✅ Category List
-        Expanded(
-          child: ListView(
-            children: _categories.entries.map((entry) {
-              final category = entry.key;
-              final data = entry.value;
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                child: ListTile(
-                  title: Text(
-                    _formatCategoryName(category), // Format category name
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    "🔹 Level: ${data["level"]}\n⭐ Points: ${data["points"]}\n🎯 Guessed Names: ${data["guessedNamesCount"]}",
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
+          );
+        },
+      ),
     );
   }
 
@@ -147,7 +173,13 @@ class ProgressScreenState extends BaseScreenState<ProgressScreen> {
   Widget buildContent(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Category Progress")),
-      body: _buildCategoryProgress(),
+      backgroundColor: AppColors.scaffoldBackgroundColor,
+      body: Column(
+        children: [
+          _buildTotalPointsCard(),
+          _buildCategoryProgress(),
+        ],
+      ),
     );
   }
 }

@@ -22,10 +22,15 @@ class NavigationContainer extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Register a new navigation item
-  void registerNavItem(DrawerItem item) {
-    _drawerItems.add(item);
-    Logger().info('DrawerItem added: ${item.label}');
+  // ✅ Register a new navigation item with an optional position
+  void registerNavItem(DrawerItem item, {int? position}) {
+    if (position != null && position >= 0 && position < _drawerItems.length) {
+      _drawerItems.insert(position, item); // Insert at specified position
+    } else {
+      _drawerItems.add(item); // Default to adding at the end
+    }
+
+    Logger().info('DrawerItem added: ${item.label} at position ${position ?? _drawerItems.length - 1}');
     notifyListeners();
   }
 

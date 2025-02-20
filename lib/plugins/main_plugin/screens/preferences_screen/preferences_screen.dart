@@ -6,6 +6,7 @@ import '../../../../core/managers/module_manager.dart';
 import '../../../../core/managers/navigation_manager.dart';
 import '../../../../core/managers/services_manager.dart';
 import '../../../../tools/logging/logger.dart';
+import '../../../../utils/consts/theme_consts.dart';
 import '../../modules/connections_module/connections_module.dart';
 import '../../modules/login_module/login_module.dart';
 import 'components/user_login.dart';
@@ -16,7 +17,7 @@ class PreferencesScreen extends BaseScreen {
 
   @override
   String computeTitle(BuildContext context) {
-    return "Account Settings";
+    return "Profile";
   }
 
   @override
@@ -214,6 +215,7 @@ class PreferencesScreenState extends BaseScreenState<PreferencesScreen> {
 
   Future<void> _deleteUser() async {
     try {
+      Logger().info("🧹 deleting user...");
       final response = await loginModule.deleteUser();
 
       if (response != null && response.containsKey("success")) {
@@ -237,56 +239,29 @@ class PreferencesScreenState extends BaseScreenState<PreferencesScreen> {
     }
   }
 
-
-
-  Widget _buildUserInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Account Details",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 20),
-        Text("Username: $_username"),
-        Text("Email: $_email"),
-        const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: _showCategorySelector,
-          child: Text("Select Category: $_selectedCategory"),
-        ),
-        const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: _logoutUser,
-          child: const Text("Logout"),
-        ),
-        const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: _confirmDeleteAccount, // ✅ Shows confirmation dialog before deleting
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-          child: const Text("Delete Account", style: TextStyle(color: Colors.white)),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget buildContent(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 10), // ✅ Moved inside Column
-            ElevatedButton(
-              onPressed: () {
-                NavigationContainer().navigateTo(context, "/progress");
-              },
-              child: const Text("View Category Progress"),
+
+            const SizedBox(height: 20), // ✅ Better spacing
+
+            // Select Category Button
+            OutlinedButton.icon(
+              onPressed: _showCategorySelector,
+              icon: const Icon(Icons.category, color: AppColors.accentColor),
+              label: Text(
+                "Selected Category: ${_formatCategory(_selectedCategory!)}",
+                style: AppTextStyles.buttonText,
+              ),
             ),
-            const SizedBox(height: 10), // Optional: Add spacing
+            const SizedBox(height: 20),
             _isLoggedIn
-                ? _buildUserInfo()
+                ? _buildUserSection()
                 : _showRegisterForm
                 ? RegisterWidget(
               onRegister: (username, email, password) async {
@@ -314,6 +289,83 @@ class PreferencesScreenState extends BaseScreenState<PreferencesScreen> {
               passwordController: _passwordController,
               onLogin: _loginUser,
               onRegisterToggle: () => setState(() => _showRegisterForm = true),
+            ),
+            const SizedBox(height: 10),
+
+            // ✅ View Progress Button
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  NavigationContainer().navigateTo(context, "/progress");
+                },
+                child: const Text("View Your Progress"),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// ✅ Improved User Info Section with Card Layout
+  Widget _buildUserSection() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      color: AppColors.primaryColor,
+      elevation: 4,
+      margin: AppPadding.defaultPadding,
+      child: Padding(
+        padding: AppPadding.cardPadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Account Details",
+              style: AppTextStyles.headingMedium(color: AppColors.accentColor),
+            ),
+            const Divider(
+              color: AppColors.lightGray,
+              thickness: 1,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "👤 Username: $_username",
+              style: AppTextStyles.bodyMedium,
+            ),
+            Text(
+              "📧 Email: $_email",
+              style: AppTextStyles.bodyMedium,
+            ),
+            const SizedBox(height: 20),
+
+            // Action Buttons - Logout & Delete
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Logout Button
+                OutlinedButton(
+                  onPressed: _logoutUser,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.accentColor,
+                    side: const BorderSide(color: AppColors.accentColor),
+                  ),
+                  child: const Text("Logout"),
+                ),
+
+                // Delete Account Button
+                ElevatedButton(
+                  onPressed: _confirmDeleteAccount,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.redAccent,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text(
+                    "Delete Account",
+                    style: AppTextStyles.buttonText,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

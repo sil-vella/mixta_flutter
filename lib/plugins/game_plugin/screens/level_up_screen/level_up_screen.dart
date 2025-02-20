@@ -3,6 +3,7 @@ import 'package:mixta_guess_who/core/managers/module_manager.dart';
 import '../../../../core/00_base/screen_base.dart';
 import '../../../../core/managers/services_manager.dart';
 import '../../../../tools/logging/logger.dart';
+import '../../../../utils/consts/theme_consts.dart'; // ✅ Import Theme Constants
 
 class LevelUpScreen extends BaseScreen {
   const LevelUpScreen({Key? key}) : super(key: key);
@@ -41,78 +42,67 @@ class LevelUpScreenState extends BaseScreenState<LevelUpScreen> {
     });
   }
 
+  void _handleLevelUp() {
+    Logger().info("🎯 Leveling up...");
+    Navigator.pushReplacementNamed(context, "/game");
+  }
+
+  void _handleEndGame() {
+    Logger().info("🏆 Game completed, selecting a new category...");
+    Navigator.pushReplacementNamed(context, "/preferences");
+  }
+
   @override
   Widget buildContent(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: _isEndGame
-                    ? [Colors.deepPurpleAccent, Colors.black87]
-                    : [Colors.blueAccent, Colors.lightBlueAccent],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+    return Container(
+      color: AppColors.scaffoldBackgroundColor, // ✅ Use Themed Background
+      padding: AppPadding.defaultPadding, // ✅ Apply consistent padding
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            _isEndGame ? Icons.emoji_events : Icons.rocket_launch,
+            size: 100,
+            color: AppColors.accentColor, // ✅ Use themed accent color
+          ),
+          const SizedBox(height: 20),
+
+          // ✅ Main Heading
+          Text(
+            _isEndGame ? "🏆 Congratulations!" : "🎉 Level Up!",
+            style: AppTextStyles.headingLarge(color: AppColors.accentColor),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+
+          // ✅ Subheading Text
+          Text(
+            _isEndGame
+                ? "You've completed this category and proved your skills!"
+                : "Keep going! The next challenge awaits!",
+            style: AppTextStyles.bodyLarge,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 40),
+
+          // ✅ Button (Uses Themed Button Styling)
+          ElevatedButton(
+            onPressed: _isEndGame ? _handleEndGame : _handleLevelUp, // ✅ Calls the correct function
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accentColor, // ✅ Gold Theme Color
+              foregroundColor: AppColors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
+            child: Text(
+              _isEndGame ? "Select a new category" : "Continue to Next Level",
+              style: AppTextStyles.buttonText,
+            ),
           ),
-        ),
-
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                _isEndGame ? Icons.emoji_events : Icons.rocket_launch,
-                size: 100,
-                color: Colors.white,
-              ),
-              const SizedBox(height: 20),
-              Text(
-                _isEndGame
-                    ? "🏆 Congratulations! You've completed the game!"
-                    : "🎉 Level Up! You're now on the next stage!",
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              Text(
-                _isEndGame
-                    ? "You reached the highest level and proved your skills!"
-                    : "Keep going! The next challenge awaits!",
-                style: const TextStyle(
-                  fontSize: 18,
-                  color: Colors.white70,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, "/game");
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: _isEndGame ? Colors.deepPurple : Colors.blue,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                child: Text(
-                  _isEndGame ? "Restart Game" : "Continue to Next Level",
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

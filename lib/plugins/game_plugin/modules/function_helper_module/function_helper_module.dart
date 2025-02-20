@@ -108,23 +108,29 @@ class FunctionHelperModule extends ModuleBase {
         if (key.contains('level') || key.contains('points') || key.contains('guessed')) {
           // Determine the type of the value and reset it
           dynamic value = await sharedPref?.callServiceMethod('get', [key]);
+
           if (value is int) {
-            // Reset integers to 0
-            await sharedPref?.callServiceMethod('setInt', [key, 1]);
-            Logger().info("✅ Reset key: $key to 0");
+            int resetValue = key.contains('level_') ? 1 : 0; // ✅ Levels reset to 1, Points reset to 0
+            await sharedPref?.callServiceMethod('setInt', [key, resetValue]);
+            Logger().info("✅ Reset key: $key to $resetValue");
+
           } else if (value is List<String>) {
-            // Reset lists to empty
+            // ✅ Reset lists to empty
             await sharedPref?.callServiceMethod('setStringList', [key, []]);
             Logger().info("✅ Reset key: $key to []");
+
           } else if (value is String) {
-            // Reset strings to empty (if applicable)
+            // ✅ Reset strings to empty (if applicable)
             await sharedPref?.callServiceMethod('setString', [key, '']);
             Logger().info("✅ Reset key: $key to ''");
+
           } else {
             Logger().info("⚠️ Key $key has an unsupported type: ${value.runtimeType}");
           }
         }
       }
+
+
 
       Logger().info("✅ SharedPreferences values reset successfully.");
     } catch (e) {

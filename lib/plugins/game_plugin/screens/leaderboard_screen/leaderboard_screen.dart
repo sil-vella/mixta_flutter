@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mixta_guess_who/core/managers/module_manager.dart';
 import '../../../../core/00_base/screen_base.dart';
 import '../../../../tools/logging/logger.dart';
+import '../../../../utils/consts/theme_consts.dart';
 import '../../modules/leaderboard_module/leaderboard_module.dart';
 
 class LeaderboardScreen extends BaseScreen {
@@ -31,14 +32,9 @@ class LeaderboardScreenState extends BaseScreenState<LeaderboardScreen> {
       children: [
         // ✅ Background Gradient
         Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.deepPurple, Colors.purpleAccent],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
+          color: AppColors.scaffoldBackgroundColor, // ✅ Apply theme background
         ),
+
 
         // ✅ Leaderboard Title
         Positioned(

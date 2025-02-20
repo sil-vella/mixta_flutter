@@ -55,10 +55,13 @@ class _MyAppState extends State<MyApp> {
 
         return MaterialApp(
           title: Config.appTitle,
-          theme: AppTheme.darkTheme,
+          theme: AppTheme.darkTheme.copyWith(
+            scaffoldBackgroundColor: AppColors.scaffoldBackgroundColor, // ✅ Ensure solid background
+          ),
           initialRoute: '/',
           routes: navContainer.routes,
         );
+
       },
     );
   }

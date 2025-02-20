@@ -229,7 +229,7 @@ class GamePlayModule extends ModuleBase {
         level: level,
         guessedActor: correctActor,
       );
-
+      Logger().forceLog("📜 reward data if correct ${rewardData}");
       logger.info("🏆 Updated Rewards: ${rewardData}");
 
       // ✅ Update game state with level-up or end-game status

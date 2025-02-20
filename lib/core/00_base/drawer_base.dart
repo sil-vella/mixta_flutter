@@ -11,16 +11,16 @@ class CustomDrawer extends StatelessWidget {
       child: ListView(
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(color: AppColors.primaryColor), // ✅ Use primary theme color instead of blue
+            decoration: BoxDecoration(color: AppColors.primaryColor), // ✅ Use primary theme color
             child: Text(
-              'Navigation Menu',
+              'Menu',
               style: AppTextStyles.headingMedium(color: AppColors.accentColor), // 🌟 Gold Accent
             ),
           ),
 
           ...navContainer.drawerItems.map((item) => ListTile(
-            leading: Icon(item.icon),
-            title: Text(item.label),
+            leading: Icon(item.icon, color: AppColors.accentColor),
+            title: Text(item.label, style: AppTextStyles.bodyLarge),
             onTap: () {
               Navigator.pop(context); // Close drawer
               navContainer.navigateTo(context, item.route);

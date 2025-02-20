@@ -45,22 +45,22 @@ class GamePlugin extends PluginBase {
       'reg_nav': () {
         navigationContainer.registerRoute('/game', (context) => GameScreen());
         navigationContainer.registerNavItem(DrawerItem(
-          label: 'Guess Who',
+          label: 'Play Guess Who',
           route: '/game',
           icon: Icons.quiz,
-        ));
+        ), position: 1);
         navigationContainer.registerRoute('/leaderboard', (context) => LeaderboardScreen());
         navigationContainer.registerNavItem(DrawerItem(
           label: 'Leaderboard',
           route: '/leaderboard',
           icon: Icons.quiz,
-        ));
+        ), position: 4);
         navigationContainer.registerRoute('/progress', (context) => ProgressScreen());
         navigationContainer.registerNavItem(DrawerItem(
           label: 'My Progress',
           route: '/progress',
           icon: Icons.quiz,
-        ));
+        ), position: 3);
         navigationContainer.registerRoute('/level-up', (context) => LevelUpScreen());
       },
     });

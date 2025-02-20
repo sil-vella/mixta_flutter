@@ -79,9 +79,8 @@ class RewardsModule extends ModuleBase {
     final username = await sharedPref.callServiceMethod('getString', ['username']);
     final email = await sharedPref.callServiceMethod('getString', ['email']);
 
+    await sharedPref.callServiceMethod('setInt', ['points_${category}_level$currentLevel', updatedPoints]);
     int totalPoints = await functionsHelper.getTotalPoints(); // Get updated total
-    await sharedPref.callServiceMethod('setInt', ['total_points', totalPoints]); // Store the new total
-    Logger().info("🏆 Total points updated: $totalPoints");
 
     // ✅ Backend request to update rewards
     Map<String, dynamic> response = {};
@@ -101,7 +100,7 @@ class RewardsModule extends ModuleBase {
           "total_points": totalPoints,
         }
       ]);
-
+      Logger().forceLog("📜 Response from backend: $totalPoints");
       Logger().info("✅ Response from backend: $response");
       Logger().forceLog("📜 Response from backend: $response");
 
@@ -121,17 +120,18 @@ class RewardsModule extends ModuleBase {
     bool endGame = response["endGame"] ?? false;
     int newLevel = levelUp ? currentLevel + 1 : currentLevel;
 
-    await sharedPref.callServiceMethod('setInt', ['points_${category}_level$currentLevel', updatedPoints]);
+
     await sharedPref.callServiceMethod('setInt', ['level_$category', newLevel]);
 
 
-
+    Logger().forceLog("📜 sharedpref total after update: $totalPoints");
     Logger().info("🏆 Updated Rewards: Points: $updatedPoints | Level: $newLevel | Level Up: $levelUp | EndGame: $endGame");
 
     return {
       "points": updatedPoints,
       "endGame": endGame,
-      "levelUp": levelUp
+      "levelUp": levelUp,
+      "totalPoints": totalPoints,
     };
   }
 

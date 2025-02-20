@@ -3,6 +3,7 @@ import '../../../../core/00_base/module_base.dart';
 import '../../../../core/managers/module_manager.dart';
 import '../../../../core/managers/services_manager.dart';
 import '../../../../tools/logging/logger.dart';
+import '../../../../utils/consts/theme_consts.dart'; // ✅ Import Theme
 
 class LeaderboardModule extends ModuleBase {
   final Logger logger = Logger();
@@ -65,83 +66,107 @@ class LeaderboardModule extends ModuleBase {
     }
   }
 
-  /// ✅ Build the **User Rank Card** Widget
+  /// ✅ **User Rank Card (Styled)**
   Widget buildUserRankCard(Map<String, dynamic>? userRank) {
     if (userRank == null) return const SizedBox.shrink();
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.purpleAccent.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.purple, width: 2),
-      ),
-      child: Column(
-        children: [
-          const Text(
-            "Your Rank",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.purple),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            "#${userRank["rank"]} - ${userRank["username"]}",
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          Text("Points: ${userRank["points"]}"),
-        ],
+    return Card(
+      color: AppColors.primaryColor, // ✅ Consistent dark theme
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: AppPadding.defaultPadding,
+      child: Padding(
+        padding: AppPadding.cardPadding,
+        child: Column(
+          children: [
+            Text(
+              "🏆 Your Rank",
+              style: AppTextStyles.headingSmall(color: AppColors.accentColor),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "#${userRank["rank"]} - ${userRank["username"]}",
+              style: AppTextStyles.bodyLarge,
+            ),
+            Text(
+              "⭐ Points: ${userRank["points"]}",
+              style: AppTextStyles.bodyMedium,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  /// ✅ Build the **Leaderboard List** Widget
+  /// ✅ **Leaderboard List (Styled)**
   Widget buildLeaderboardList(List<Map<String, dynamic>> leaderboard, String? currentUsername) {
     return Expanded(
       child: ListView.builder(
         itemCount: leaderboard.length,
+        padding: AppPadding.defaultPadding,
         itemBuilder: (context, index) {
           final user = leaderboard[index];
 
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.purpleAccent,
-              child: Text("${index + 1}"), // ✅ Show ranking
+          return Card(
+            color: (currentUsername != null && user["username"] == currentUsername)
+                ? AppColors.accentColor.withOpacity(0.3) // ✅ Highlight current user
+                : AppColors.primaryColor, // ✅ Default color
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: AppColors.accentColor,
+                child: Text(
+                  "${index + 1}",
+                  style: AppTextStyles.bodyMedium,
+                ),
+              ),
+              title: Text(
+                user["username"] ?? "Unknown",
+                style: AppTextStyles.bodyLarge,
+              ),
+              subtitle: Text(
+                "⭐ Points: ${user["points"] ?? 0}",
+                style: AppTextStyles.bodyMedium,
+              ),
             ),
-            title: Text(user["username"] ?? "Unknown"),
-            subtitle: Text("Points: ${user["points"] ?? 0}"),
-            tileColor: (currentUsername != null && user["username"] == currentUsername)
-                ? Colors.yellow.withOpacity(0.3) // ✅ Highlight current user in the list
-                : null,
           );
         },
       ),
     );
   }
 
-  /// ✅ Combine User Rank & Leaderboard List
   Widget buildLeaderboardWidget() {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: getLeaderboard(), // ✅ Fetch leaderboard & user rank
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator()); // ✅ Show loading
-        }
+    return Scaffold(
+      backgroundColor: AppColors.scaffoldBackgroundColor, // ✅ Ensure solid background
+      body: FutureBuilder<Map<String, dynamic>>(
 
-        if (snapshot.hasError || snapshot.data == null || snapshot.data!["leaderboard"] == null) {
-          return const Center(child: Text("No leaderboard data available.")); // ✅ Handle errors
-        }
+        future: getLeaderboard(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        final leaderboard = List<Map<String, dynamic>>.from(snapshot.data!["leaderboard"]);
-        final userRank = snapshot.data!["user_rank"]; // ✅ Get user rank if available
-        final currentUsername = userRank != null ? userRank["username"] : null;
+          if (snapshot.hasError || snapshot.data == null || snapshot.data!["leaderboard"] == null) {
+            return const Center(
+              child: Text("No leaderboard data available.", style: AppTextStyles.bodyLarge),
+            );
+          }
 
-        return Column(
-          children: [
-            buildUserRankCard(userRank), // ✅ Show User Rank
-            buildLeaderboardList(leaderboard, currentUsername), // ✅ Show Leaderboard List
-          ],
-        );
-      },
+          final leaderboard = List<Map<String, dynamic>>.from(snapshot.data!["leaderboard"]);
+          final userRank = snapshot.data!["user_rank"];
+          final currentUsername = userRank != null ? userRank["username"] : null;
+
+          return Column(
+            children: [
+              buildUserRankCard(userRank),
+              buildLeaderboardList(leaderboard, currentUsername),
+            ],
+          );
+        },
+      ),
     );
   }
+
 }

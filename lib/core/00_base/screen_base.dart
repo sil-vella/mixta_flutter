@@ -68,7 +68,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
                 ),
                 child: Center(
                   child: Text(
-                    'Navigation Menu',
+                    'Menu',
                     style: TextStyle(
                       color: AppColors.primaryColor, // ✅ Themed Text Color
                       fontSize: 24,

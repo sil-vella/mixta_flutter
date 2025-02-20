@@ -42,13 +42,13 @@ class MainPlugin extends PluginBase {
           label: 'Home',
           route: '/',
           icon: Icons.home,
-        ));
+        ), position: 0);
 
         navigationContainer.registerNavItem(DrawerItem(
-          label: 'Preferences',
+          label: 'Profile',
           route: '/preferences',
           icon: Icons.settings,
-        ));
+        ), position: 2);
 
         Logger().info('MainPlugin: Navigation items registered.');
       },
